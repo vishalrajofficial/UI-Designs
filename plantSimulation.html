@@ -1,0 +1,1534 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Plant Growing Simulation</title>
+  <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+    body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f0f4e8 0%, #e8f0d8 100%);
+            min-height: 100vh;
+            user-select: none;
+            overflow-x: hidden;
+        }
+
+    .container {
+            max-width: 400px;
+            margin: 0 auto;
+            padding: 20px;
+            min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+        }
+
+        .header {
+      text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .title {
+            color: #4a5c3a;
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+
+        .plant-container {
+            background: linear-gradient(135deg, #8b7355 0%, #a08368 100%);
+            border-radius: 20px;
+            padding: 30px 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 8px 25px rgba(75, 92, 58, 0.2);
+      position: relative;
+            overflow: hidden;
+            min-height: 280px;
+      display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-end;
+            transition: all 0.5s ease;
+        }
+
+        .plant-container.low-light {
+            filter: brightness(0.6) contrast(0.8);
+            box-shadow: 0 8px 25px rgba(75, 92, 58, 0.1);
+        }
+
+        .plant-container.high-light {
+            filter: brightness(1.2) contrast(1.1);
+            box-shadow: 0 8px 25px rgba(255, 235, 59, 0.3);
+        }
+
+        .plant-container.drag-target {
+            border: 3px dashed #8bc34a;
+            animation: targetPulse 1s ease-in-out infinite;
+        }
+
+        @keyframes targetPulse {
+            0%, 100% { border-color: #8bc34a; }
+            50% { border-color: #7cb342; }
+        }
+
+        .soil {
+      position: absolute;
+      bottom: 0;
+            left: 0;
+            right: 0;
+            height: 60px;
+            background: linear-gradient(135deg, #6b5344 0%, #8b7355 100%);
+            border-radius: 0 0 20px 20px;
+        }
+
+    .plant {
+            position: relative;
+            z-index: 2;
+            cursor: grab;
+            transition: transform 0.3s ease;
+            transform-origin: bottom center;
+        }
+
+        .plant:active {
+            cursor: grabbing;
+        }
+
+        .plant.stage-1 .stem {
+            height: 20px;
+        }
+
+        .plant.stage-2 .stem {
+            height: 40px;
+        }
+
+        .plant.stage-3 .stem {
+            height: 60px;
+        }
+
+        .plant.stage-4 .stem {
+            height: 80px;
+        }
+
+        .plant.stage-5 .stem {
+            height: 100px;
+        }
+
+        .stem {
+            width: 6px;
+            background: linear-gradient(135deg, #6b8e23 0%, #8fbc8f 100%);
+            border-radius: 3px;
+            transition: height 1s ease;
+            position: relative;
+            margin: 0 auto;
+        }
+
+    .leaves {
+      position: absolute;
+            top: 50%;
+      left: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+    .leaf {
+      position: absolute;
+            width: 25px;
+            height: 15px;
+            background: linear-gradient(135deg, #7cb342 0%, #8bc34a 100%);
+            border-radius: 50% 10px;
+            animation: leafSway 3s ease-in-out infinite;
+            transition: all 0.5s ease;
+            opacity: 1;
+            transform: scale(1);
+        }
+
+        .leaf.pruned {
+      opacity: 0;
+            transform: scale(0) rotate(90deg);
+            animation: leafFall 0.5s ease-out forwards;
+        }
+
+        @keyframes leafFall {
+            0% {
+      opacity: 1;
+                transform: scale(1) rotate(0deg);
+            }
+            100% {
+                opacity: 0;
+                transform: scale(0) rotate(90deg) translateY(20px);
+            }
+        }
+
+        .leaf.left {
+            left: -30px;
+            transform-origin: right center;
+            animation-delay: -0.5s;
+        }
+
+        .leaf.right {
+            right: -30px;
+            transform-origin: left center;
+            animation-delay: -1s;
+        }
+
+        .leaf.top {
+            top: -20px;
+            transform-origin: bottom center;
+            animation-delay: -1.5s;
+        }
+
+        @keyframes leafSway {
+            0%, 100% { transform: rotate(0deg); }
+            50% { transform: rotate(5deg); }
+        }
+
+        .flower {
+      position: absolute;
+            top: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 20px;
+            height: 20px;
+            background: radial-gradient(circle, #ff6b6b 0%, #ff5252 100%);
+      border-radius: 50%;
+      opacity: 0;
+            transition: opacity 1s ease;
+        }
+
+        .plant.stage-4 .flower,
+        .plant.stage-5 .flower {
+            opacity: 1;
+        }
+
+        .water-drop {
+      position: absolute;
+            width: 10px;
+            height: 10px;
+            background: #4fc3f7;
+            border-radius: 50% 50% 50% 0;
+            transform: rotate(-45deg);
+            opacity: 0;
+            animation: waterDrop 1s ease-out;
+        }
+
+        @keyframes waterDrop {
+            0% {
+      opacity: 1;
+                transform: translateY(-50px) rotate(-45deg);
+            }
+            100% {
+                opacity: 0;
+                transform: translateY(50px) rotate(-45deg);
+            }
+        }
+
+        .fertilizer-effect {
+            position: absolute;
+            width: 8px;
+            height: 8px;
+            background: #ff7043;
+            border-radius: 50%;
+            opacity: 0;
+            animation: fertilizerSparkle 1.5s ease-out;
+        }
+
+        @keyframes fertilizerSparkle {
+            0% {
+      opacity: 1;
+                transform: translateY(0px) scale(1);
+            }
+            50% {
+                opacity: 0.8;
+                transform: translateY(-30px) scale(1.5);
+            }
+            100% {
+                opacity: 0;
+                transform: translateY(-60px) scale(0.5);
+            }
+        }
+
+        .prune-effect {
+      position: absolute;
+            width: 15px;
+            height: 15px;
+            background: #ab47bc;
+            border-radius: 50%;
+            opacity: 0;
+            animation: pruneGlow 1s ease-out;
+        }
+
+        @keyframes pruneGlow {
+            0% {
+      opacity: 1;
+                transform: scale(0);
+            }
+            50% {
+                opacity: 0.8;
+                transform: scale(2);
+            }
+            100% {
+                opacity: 0;
+                transform: scale(3);
+            }
+        }
+
+        @keyframes sparkleGrow {
+            0% {
+                opacity: 1;
+                transform: scale(0);
+            }
+            50% {
+                opacity: 0.8;
+                transform: scale(2);
+            }
+            100% {
+                opacity: 0;
+                transform: scale(0);
+            }
+        }
+
+        .progress-section {
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 15px rgba(75, 92, 58, 0.1);
+        }
+
+        .progress-label {
+            color: #4a5c3a;
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 10px;
+        }
+
+    .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #e0e0e0;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+      height: 100%;
+            background: linear-gradient(90deg, #7cb342 0%, #8bc34a 100%);
+            border-radius: 4px;
+            transition: width 0.5s ease;
+            width: 0%;
+        }
+
+    .controls {
+      display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .drag-controls {
+            display: flex;
+            justify-content: space-around;
+            gap: 20px;
+            margin-bottom: 15px;
+        }
+
+        .drag-btn {
+            width: 80px;
+            height: 120px;
+      border: none;
+            border-radius: 20px;
+            color: white;
+            font-size: 12px;
+      font-weight: 600;
+            cursor: grab;
+            transition: all 0.3s ease;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+            justify-content: center;
+            gap: 8px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .drag-btn:active {
+            cursor: grabbing;
+        }
+
+        .drag-btn.water {
+            background: linear-gradient(135deg, #2196f3 0%, #1976d2 100%);
+            box-shadow: 0 6px 20px rgba(33, 150, 243, 0.4);
+        }
+
+        .drag-btn.fertilize {
+            background: linear-gradient(135deg, #ff7043 0%, #f4511e 100%);
+            box-shadow: 0 6px 20px rgba(255, 112, 67, 0.4);
+        }
+
+        .drag-btn.prune {
+            background: linear-gradient(135deg, #ab47bc 0%, #9c27b0 100%);
+            box-shadow: 0 6px 20px rgba(171, 71, 188, 0.4);
+        }
+
+        .drag-btn.dragging {
+            transform: scale(1.1) translateY(-10px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        .drag-btn.triggered {
+            animation: triggerPulse 0.5s ease-out;
+        }
+
+        @keyframes triggerPulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.2); }
+            100% { transform: scale(1); }
+        }
+
+        .drag-icon {
+            width: 32px;
+            height: 32px;
+            fill: currentColor;
+        }
+
+        .drag-text {
+            font-size: 10px;
+            text-align: center;
+            line-height: 1.2;
+        }
+
+        .regular-controls {
+      display: flex;
+            justify-content: center;
+        }
+
+        .control-btn {
+            background: linear-gradient(135deg, #8bc34a 0%, #7cb342 100%);
+            color: white;
+            border: none;
+            border-radius: 15px;
+            padding: 15px 30px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(123, 179, 66, 0.3);
+      display: flex;
+      align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .control-btn:active {
+            transform: translateY(2px);
+            box-shadow: 0 2px 10px rgba(123, 179, 66, 0.3);
+        }
+
+        .control-btn.timelapse {
+            background: linear-gradient(135deg, #42a5f5 0%, #1e88e5 100%);
+            box-shadow: 0 4px 15px rgba(66, 165, 245, 0.3);
+        }
+
+        .control-btn.timelapse.active {
+            background: linear-gradient(135deg, #f44336 0%, #d32f2f 100%);
+            box-shadow: 0 4px 15px rgba(244, 67, 54, 0.3);
+        }
+
+        .icon {
+            width: 18px;
+            height: 18px;
+            fill: currentColor;
+        }
+
+        .environment {
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 15px rgba(75, 92, 58, 0.1);
+        }
+
+        .env-title {
+            color: #4a5c3a;
+            font-size: 16px;
+      font-weight: 600;
+            margin-bottom: 15px;
+        }
+
+        .slider-container {
+            margin-bottom: 20px;
+        }
+
+        .slider-label {
+            color: #666;
+            font-size: 12px;
+            margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+            gap: 6px;
+        }
+
+        .slider {
+            width: 100%;
+            height: 6px;
+            border-radius: 3px;
+            background: #e0e0e0;
+      outline: none;
+            -webkit-appearance: none;
+            appearance: none;
+        }
+
+        .slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #8bc34a 0%, #7cb342 100%);
+            cursor: pointer;
+            box-shadow: 0 2px 8px rgba(123, 179, 66, 0.4);
+        }
+
+        .temp-dial {
+            position: relative;
+            width: 80px;
+            height: 80px;
+            margin: 0 auto;
+            cursor: pointer;
+        }
+
+        .dial-bg {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+            box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.1);
+      display: flex;
+            align-items: center;
+      justify-content: center;
+            position: relative;
+            z-index: 2;
+        }
+
+        .dial-pointer {
+            position: absolute;
+            top: 5px;
+            left: 50%;
+            width: 2px;
+            height: 35px;
+            background: #ff5722;
+            border-radius: 2px;
+            transform-origin: 50% 35px;
+            transform: translateX(-50%) rotate(0deg);
+            transition: transform 0.3s ease;
+            z-index: 1;
+        }
+
+        .dial-temp {
+            font-size: 11px;
+            font-weight: 600;
+            color: #4a5c3a;
+            z-index: 3;
+      position: relative;
+        }
+
+        .status {
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 15px;
+            padding: 15px;
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(75, 92, 58, 0.1);
+        }
+
+        .status-text {
+            color: #4a5c3a;
+            font-size: 14px;
+      font-weight: 500;
+        }
+
+        .shake-instruction {
+            color: #666;
+            font-size: 12px;
+            margin-top: 5px;
+        }
+
+        .pest-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+      pointer-events: none;
+            z-index: 3;
+        }
+
+        .pest {
+            position: absolute;
+            width: 8px;
+            height: 8px;
+            background: #8b4513;
+            border-radius: 50%;
+            animation: pestMove 2s ease-in-out infinite;
+        }
+
+        @keyframes pestMove {
+            0%, 100% { transform: translate(0, 0); }
+            50% { transform: translate(10px, -5px); }
+        }
+
+        .notification {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(75, 92, 58, 0.95);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 20px;
+            font-size: 14px;
+            z-index: 1000;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .notification.show {
+            opacity: 1;
+        }
+
+
+
+        .control-btn.dragging {
+            transform: scale(1.1);
+            box-shadow: 0 8px 25px rgba(123, 179, 66, 0.4);
+        }
+
+        .shake-indicator {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(255, 0, 0, 0.9);
+            color: white;
+            padding: 20px;
+            border-radius: 15px;
+            font-size: 16px;
+            font-weight: 600;
+            z-index: 1500;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .shake-indicator.show {
+            opacity: 1;
+        }
+
+                    @media (max-width: 480px) {
+                .container {
+                    padding: 15px;
+                }
+                
+                .drag-controls {
+                    flex-direction: column;
+                    gap: 15px;
+                    align-items: center;
+                }
+
+                .drag-btn {
+                    width: 250px;
+                    height: 60px;
+                    flex-direction: row;
+                }
+
+                .drag-text {
+                    font-size: 12px;
+                }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+        <div class="header">
+            <h1 class="title">Plant Growing Simulation</h1>
+        </div>
+
+        <div class="plant-container" id="plantContainer">
+            <div class="soil"></div>
+            <div class="plant stage-1" id="plant">
+                <div class="stem">
+                    <div class="leaves">
+                        <div class="leaf left"></div>
+                        <div class="leaf right"></div>
+                        <div class="leaf top"></div>
+      </div>
+                    <div class="flower"></div>
+      </div>
+      </div>
+            <div class="pest-overlay" id="pestOverlay"></div>
+      </div>
+
+        <div class="progress-section">
+            <div class="progress-label">Growth Progress</div>
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressFill"></div>
+    </div>
+    </div>
+
+    <div class="controls">
+            <div class="drag-controls">
+                <button class="drag-btn water" id="waterBtn">
+                    <svg class="drag-icon" viewBox="0 0 24 24">
+                        <path d="M12,20A6,6 0 0,1 6,14C6,10 12,3.25 12,3.25S18,10 18,14A6,6 0 0,1 12,20Z"/>
+                    </svg>
+                    <div class="drag-text">Tap or Drag<br>to Water</div>
+      </button>
+                <button class="drag-btn fertilize" id="fertilizeBtn">
+                    <svg class="drag-icon" viewBox="0 0 24 24">
+                        <path d="M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M12,4A8,8 0 0,1 20,12A8,8 0 0,1 12,20A8,8 0 0,1 4,12A8,8 0 0,1 12,4M11,6V9H8V11H11V14H13V11H16V9H13V6H11Z"/>
+                    </svg>
+                    <div class="drag-text">Tap or Drag<br>to Fertilize</div>
+      </button>
+                <button class="drag-btn prune" id="pruneBtn">
+                    <svg class="drag-icon" viewBox="0 0 24 24">
+                        <path d="M9,3V4H4V6H5V19A2,2 0 0,0 7,21H17A2,2 0 0,0 19,19V6H20V4H15V3H9M7,6H17V19H7V6M9,8V17H11V8H9M13,8V17H15V8H13Z"/>
+                    </svg>
+                    <div class="drag-text">Tap or Drag<br>to Prune</div>
+      </button>
+            </div>
+            <div class="regular-controls">
+                <button class="control-btn timelapse" id="timelapseBtn">
+                    <svg class="icon" viewBox="0 0 24 24">
+                        <path d="M15,1H9V3H15M11,14H13V8H11M19.03,7.39L20.45,5.97C20,5.46 19.55,5 19.04,4.56L17.62,6C16.07,4.74 14.12,4 12,4A9,9 0 0,0 3,13A9,9 0 0,0 12,22C17,22 21,17.97 21,13C21,10.88 20.26,8.93 19.03,7.39Z"/>
+                    </svg>
+                    <span id="timelapseText">Start Time-lapse</span>
+      </button>
+    </div>
+      </div>
+
+        <div class="environment">
+            <div class="env-title">Environment</div>
+            <div class="slider-container">
+                <div class="slider-label">
+                    <svg class="icon" viewBox="0 0 24 24">
+                        <path d="M12,8A4,4 0 0,0 8,12A4,4 0 0,0 12,16A4,4 0 0,0 16,12A4,4 0 0,0 12,8M12,18A6,6 0 0,1 6,12A6,6 0 0,1 12,6A6,6 0 0,1 18,12A6,6 0 0,1 12,18M20,8.69V4H15.31L12,0.69L8.69,4H4V8.69L0.69,12L4,15.31V20H8.69L12,23.31L15.31,20H20V15.31L23.31,12L20,8.69Z"/>
+                    </svg>
+                    Sunlight: <span id="sunlightValue">50%</span>
+        </div>
+                <input type="range" class="slider" id="sunlightSlider" min="0" max="100" value="50">
+      </div>
+            <div class="slider-container">
+                <div class="slider-label">
+                    <svg class="icon" viewBox="0 0 24 24">
+                        <path d="M15,13V5A3,3 0 0,0 9,5V13A5,5 0 0,0 12,18A5,5 0 0,0 15,13M12,2A6,6 0 0,1 18,8V13A6,6 0 0,1 6,13V8A6,6 0 0,1 12,2Z"/>
+                    </svg>
+                    Temperature
+    </div>
+                <div class="temp-dial" id="tempDial">
+                    <div class="dial-bg">
+                        <div class="dial-temp" id="tempValue">20°C</div>
+  </div>
+                    <div class="dial-pointer" id="dialPointer"></div>
+  </div>
+            </div>
+        </div>
+
+        <div class="status">
+            <div class="status-text" id="statusText">Tap water to help your plant grow!</div>
+            <div class="shake-instruction">Shake device to clear pests</div>
+        </div>
+    </div>
+
+    <div class="notification" id="notification"></div>
+    <div class="shake-indicator" id="shakeIndicator">Shake detected! Clearing pests...</div>
+
+  <script>
+        class PlantSimulation {
+            constructor() {
+                this.growth = 0;
+                this.stage = 1;
+                this.water = 50;
+                this.nutrients = 50;
+                this.sunlight = 50;
+                this.temperature = 20;
+                this.health = 100;
+                this.pests = 0;
+                this.lastWatered = Date.now();
+                this.lastFertilized = Date.now();
+                this.rotationX = 0;
+                this.rotationY = 0;
+                this.isTimelapseActive = false;
+                this.prunedLeaves = [];
+                this.growthInterval = null;
+                this.timelapseText = null;
+                this.leafRegrowthTimer = null;
+                this.lastLeafRegrowth = Date.now();
+                
+                this.initializeElements();
+                this.bindEvents();
+                this.startGrowthCycle();
+                this.startLeafRegrowthCycle();
+                this.initializeShakeDetection();
+            }
+
+            initializeElements() {
+                this.plant = document.getElementById('plant');
+                this.plantContainer = document.getElementById('plantContainer');
+                this.progressFill = document.getElementById('progressFill');
+                this.waterBtn = document.getElementById('waterBtn');
+                this.fertilizeBtn = document.getElementById('fertilizeBtn');
+                this.pruneBtn = document.getElementById('pruneBtn');
+                this.timelapseBtn = document.getElementById('timelapseBtn');
+                this.sunlightSlider = document.getElementById('sunlightSlider');
+                this.sunlightValue = document.getElementById('sunlightValue');
+                this.tempDial = document.getElementById('tempDial');
+                this.tempValue = document.getElementById('tempValue');
+                this.dialPointer = document.getElementById('dialPointer');
+                this.statusText = document.getElementById('statusText');
+                this.notification = document.getElementById('notification');
+                this.pestOverlay = document.getElementById('pestOverlay');
+                this.shakeIndicator = document.getElementById('shakeIndicator');
+                this.timelapseText = document.getElementById('timelapseText');
+            }
+
+            bindEvents() {
+                // Touch drag events for watering
+                this.bindDragAction(this.waterBtn, () => {
+                    this.waterPlant();
+                    return true;
+                });
+
+                // Touch drag events for fertilizing
+                this.bindDragAction(this.fertilizeBtn, () => {
+                    this.fertilizePlant();
+                    return true;
+                });
+
+                // Touch drag events for pruning
+                this.bindDragAction(this.pruneBtn, () => {
+                    this.prunePlant();
+                    return true;
+                });
+
+
+
+                // Time-lapse
+                this.timelapseBtn.addEventListener('touchstart', (e) => {
+                    e.preventDefault();
+                    this.toggleTimelapse();
+                });
+                this.timelapseBtn.addEventListener('click', () => this.toggleTimelapse());
+
+                // Plant rotation
+                this.bindPlantRotation();
+
+                // Environment controls
+                this.sunlightSlider.addEventListener('input', (e) => {
+                    this.sunlight = parseInt(e.target.value);
+                    this.sunlightValue.textContent = this.sunlight + '%';
+                    this.updateSunlightEffect();
+                });
+
+                this.tempDial.addEventListener('touchstart', this.bindTempDial.bind(this));
+                this.tempDial.addEventListener('mousedown', this.bindTempDial.bind(this));
+            }
+
+            bindPlantRotation() {
+                let isDragging = false;
+                let startX, startY;
+
+                const handleStart = (e) => {
+                    isDragging = true;
+                    const touch = e.touches ? e.touches[0] : e;
+                    startX = touch.clientX;
+                    startY = touch.clientY;
+                    e.preventDefault();
+                };
+
+                const handleMove = (e) => {
+                    if (!isDragging) return;
+                    
+                    const touch = e.touches ? e.touches[0] : e;
+                    const deltaX = touch.clientX - startX;
+                    const deltaY = touch.clientY - startY;
+                    
+                    this.rotationY += deltaX * 0.5;
+                    this.rotationX -= deltaY * 0.5;
+                    
+                    this.rotationX = Math.max(-30, Math.min(30, this.rotationX));
+                    this.rotationY = Math.max(-30, Math.min(30, this.rotationY));
+                    
+                    this.plant.style.transform = `rotateX(${this.rotationX}deg) rotateY(${this.rotationY}deg)`;
+                    
+                    startX = touch.clientX;
+                    startY = touch.clientY;
+                    e.preventDefault();
+                };
+
+                const handleEnd = (e) => {
+                    isDragging = false;
+                    e.preventDefault();
+                };
+
+                this.plant.addEventListener('touchstart', handleStart);
+                this.plant.addEventListener('touchmove', handleMove);
+                this.plant.addEventListener('touchend', handleEnd);
+                this.plant.addEventListener('mousedown', handleStart);
+                document.addEventListener('mousemove', handleMove);
+                document.addEventListener('mouseup', handleEnd);
+            }
+
+            bindTempDial() {
+                const handleTempMove = (e) => {
+                    const rect = this.tempDial.getBoundingClientRect();
+                    const centerX = rect.left + rect.width / 2;
+                    const centerY = rect.top + rect.height / 2;
+                    
+                    const touch = e.touches ? e.touches[0] : e;
+                    const angle = Math.atan2(touch.clientY - centerY, touch.clientX - centerX);
+                    const degrees = (angle * 180 / Math.PI + 90 + 360) % 360;
+                    
+                    this.temperature = Math.round(degrees / 360 * 40 + 5); // 5-45°C range
+                    this.tempValue.textContent = this.temperature + '°C';
+                    this.dialPointer.style.transform = `translateX(-50%) rotate(${degrees}deg)`;
+                };
+
+                const handleTempEnd = () => {
+                    document.removeEventListener('touchmove', handleTempMove);
+                    document.removeEventListener('touchend', handleTempEnd);
+                    document.removeEventListener('mousemove', handleTempMove);
+                    document.removeEventListener('mouseup', handleTempEnd);
+                };
+
+                document.addEventListener('touchmove', handleTempMove);
+                document.addEventListener('touchend', handleTempEnd);
+                document.addEventListener('mousemove', handleTempMove);
+                document.addEventListener('mouseup', handleTempEnd);
+            }
+
+            waterPlant() {
+                if (Date.now() - this.lastWatered < 3000) {
+                    this.showNotification('Wait a bit before watering again!');
+                    return;
+                }
+
+                this.water = Math.min(100, this.water + 25);
+                this.lastWatered = Date.now();
+                this.createWaterEffect();
+                this.showNotification('Plant watered! 💧');
+                this.updateStatus();
+            }
+
+            createWaterEffect() {
+                for (let i = 0; i < 5; i++) {
+                    setTimeout(() => {
+                        const drop = document.createElement('div');
+                        drop.className = 'water-drop';
+                        drop.style.left = Math.random() * 200 + 100 + 'px';
+                        drop.style.top = '50px';
+                        this.plantContainer.appendChild(drop);
+                        
+                        setTimeout(() => {
+                            if (drop.parentNode) {
+                                drop.parentNode.removeChild(drop);
+                            }
+                        }, 1000);
+                    }, i * 200);
+                }
+            }
+
+            fertilizePlant() {
+                if (Date.now() - this.lastFertilized < 10000) {
+                    this.showNotification('Too soon to fertilize again!');
+                    return;
+                }
+
+                this.nutrients = Math.min(100, this.nutrients + 30);
+                this.lastFertilized = Date.now();
+                this.createFertilizerEffect();
+                this.showNotification('Plant fertilized! 🌱');
+                this.updateStatus();
+            }
+
+            prunePlant() {
+                if (this.stage < 2) {
+                    this.showNotification('Plant too small to prune!');
+                    return;
+                }
+
+                const leaves = this.plant.querySelectorAll('.leaf:not(.pruned)');
+                if (leaves.length === 0) {
+                    this.showNotification('No leaves left to prune!');
+                    return;
+                }
+
+                // Prune one random leaf
+                const randomLeaf = leaves[Math.floor(Math.random() * leaves.length)];
+                randomLeaf.classList.add('pruned');
+                this.prunedLeaves.push(randomLeaf);
+
+                this.health = Math.min(100, this.health + 10);
+                this.createPruneEffect();
+                this.showNotification(`Leaf pruned! Health improved! (${leaves.length - 1} leaves remaining)`);
+                this.updateStatus();
+            }
+
+            toggleTimelapse() {
+                this.isTimelapseActive = !this.isTimelapseActive;
+                
+                if (this.isTimelapseActive) {
+                    this.timelapseBtn.classList.add('active');
+                    this.timelapseText.textContent = 'Stop Time-lapse';
+                    
+                    // Save current state
+                    this.savedState = {
+                        growth: this.growth,
+                        stage: this.stage,
+                        water: this.water,
+                        nutrients: this.nutrients,
+                        health: this.health
+                    };
+                    
+                    // Reset plant to beginning for dramatic visualization
+                    this.resetPlantForTimelapse();
+                    this.showNotification('Time-lapse: Watch complete growth cycle!');
+                } else {
+                    this.timelapseBtn.classList.remove('active');
+                    this.timelapseText.textContent = 'Start Time-lapse';
+                    
+                    // Restore previous state or keep current if user prefers
+                    if (this.savedState) {
+                        this.restoreFromTimelapse();
+                    }
+                    this.showNotification('Time-lapse stopped - state restored');
+                }
+                
+                // Restart the growth cycle with new timing
+                this.restartGrowthCycle();
+            }
+
+            resetPlantForTimelapse() {
+                // Reset to beginning for full visualization
+                this.growth = 0;
+                this.stage = 1;
+                this.water = 80;      // High water for fast growth
+                this.nutrients = 80;  // High nutrients for fast growth
+                this.health = 100;    // Perfect health
+                this.pests = 0;       // No pests
+                
+                // Reset visual state
+                this.plant.className = 'plant stage-1';
+                this.resetPrunedLeaves();
+                this.updateUI();
+                
+                // Clear any existing pests
+                this.pestOverlay.innerHTML = '';
+            }
+
+            restoreFromTimelapse() {
+                // Restore to state before time-lapse (but keep some benefits)
+                this.growth = this.savedState.growth;
+                this.stage = this.savedState.stage;
+                this.water = Math.max(this.savedState.water, this.water); // Keep higher water
+                this.nutrients = Math.max(this.savedState.nutrients, this.nutrients); // Keep higher nutrients
+                this.health = Math.max(this.savedState.health, this.health); // Keep higher health
+                
+                // Update visual state
+                this.plant.className = `plant stage-${this.stage}`;
+                this.updateUI();
+                this.savedState = null;
+            }
+
+            initializeShakeDetection() {
+                if (!window.DeviceMotionEvent) {
+                    console.log('DeviceMotionEvent not supported');
+                    return;
+                }
+
+                let lastUpdate = 0;
+                let lastX = 0, lastY = 0, lastZ = 0;
+                let shakeCount = 0;
+                let shakeTimeout = null;
+
+                const handleMotion = (e) => {
+                    const current = Date.now();
+                    if (current - lastUpdate < 100) return;
+
+                    const diffTime = current - lastUpdate;
+                    lastUpdate = current;
+
+                    const acceleration = e.accelerationIncludingGravity;
+                    if (!acceleration) return;
+
+                    const x = acceleration.x || 0;
+                    const y = acceleration.y || 0;
+                    const z = acceleration.z || 0;
+
+                    const speed = Math.abs(x + y + z - lastX - lastY - lastZ) / diffTime * 10000;
+
+                    if (speed > 500) {
+                        shakeCount++;
+                        
+                        if (shakeCount === 1) {
+                            this.showShakeIndicator();
+                        }
+                        
+                        if (shakeCount >= 2) {
+                            this.clearPests();
+                            shakeCount = 0;
+                        }
+                        
+                        // Reset shake count after 1 second
+                        clearTimeout(shakeTimeout);
+                        shakeTimeout = setTimeout(() => {
+                            shakeCount = 0;
+                        }, 1000);
+                    }
+
+                    lastX = x;
+                    lastY = y;
+                    lastZ = z;
+                };
+
+                window.addEventListener('devicemotion', handleMotion);
+                
+                // Test shake detection with keyboard for desktop
+                if (!navigator.userAgent.match(/Mobile|Android|iPhone|iPad/)) {
+                    document.addEventListener('keydown', (e) => {
+                        if (e.key === 's' || e.key === 'S') {
+                            this.showShakeIndicator();
+                            this.clearPests();
+                        }
+                    });
+                    this.showNotification('Desktop: Press "S" key to simulate shake');
+                }
+            }
+
+            clearPests() {
+                if (this.pests > 0) {
+                    this.pests = 0;
+                    this.pestOverlay.innerHTML = '';
+                    this.health = Math.min(100, this.health + 20);
+                    this.showNotification('Pests cleared! 🎉');
+                    this.updateStatus();
+                } else {
+                    this.showNotification('No pests to clear!');
+                }
+            }
+
+            showShakeIndicator() {
+                this.shakeIndicator.classList.add('show');
+          setTimeout(() => {
+                    this.shakeIndicator.classList.remove('show');
+                }, 1500);
+            }
+
+            spawnPests() {
+                if (this.pests >= 3) return;
+
+                this.pests++;
+                const pest = document.createElement('div');
+                pest.className = 'pest';
+                pest.style.left = Math.random() * 80 + 10 + '%';
+                pest.style.top = Math.random() * 60 + 20 + '%';
+                this.pestOverlay.appendChild(pest);
+            }
+
+            startGrowthCycle() {
+                this.growthInterval = setInterval(() => {
+                    this.updatePlant();
+                }, this.isTimelapseActive ? 200 : 800);
+            }
+
+            restartGrowthCycle() {
+                if (this.growthInterval) {
+                    clearInterval(this.growthInterval);
+                }
+                if (this.leafRegrowthTimer) {
+                    clearInterval(this.leafRegrowthTimer);
+                }
+                this.startGrowthCycle();
+                this.startLeafRegrowthCycle();
+            }
+
+            updatePlant() {
+                const growthRate = this.calculateGrowthRate();
+                const increment = this.isTimelapseActive ? growthRate * 5 : growthRate;
+                
+                this.growth = Math.min(100, this.growth + increment);
+                
+                // Update stage based on growth
+                const newStage = Math.min(5, Math.floor(this.growth / 20) + 1);
+                if (newStage !== this.stage) {
+                    this.stage = newStage;
+                    this.plant.className = `plant stage-${this.stage}`;
+                    this.showNotification(`Plant reached stage ${this.stage}!`);
+                    
+                    // Reset pruned leaves when growing to new stage
+                    this.resetPrunedLeaves();
+                }
+
+                // Decay resources
+                this.water = Math.max(0, this.water - (this.isTimelapseActive ? 2 : 0.5));
+                this.nutrients = Math.max(0, this.nutrients - (this.isTimelapseActive ? 1 : 0.25));
+
+                // Health calculation
+                this.calculateHealth();
+
+                // Random pest spawn
+                if (Math.random() < 0.05 && this.health < 70) {
+                    this.spawnPests();
+                }
+
+                this.updateUI();
+            }
+
+            calculateGrowthRate() {
+                let rate = 1.2;
+                
+                // Water factor
+                if (this.water > 70) rate *= 1.5;
+                else if (this.water < 30) rate *= 0.5;
+                
+                // Nutrient factor
+                if (this.nutrients > 70) rate *= 1.3;
+                else if (this.nutrients < 30) rate *= 0.7;
+                
+                // Sunlight factor
+                if (this.sunlight > 70) rate *= 1.2;
+                else if (this.sunlight < 30) rate *= 0.8;
+                
+                // Temperature factor
+                if (this.temperature >= 18 && this.temperature <= 25) rate *= 1.2;
+                else if (this.temperature < 10 || this.temperature > 35) rate *= 0.5;
+                
+                // Health factor
+                rate *= (this.health / 100);
+                
+                return rate;
+            }
+
+            calculateHealth() {
+                let healthChange = 0;
+                
+                if (this.water < 20) healthChange -= 1;
+                if (this.nutrients < 20) healthChange -= 0.5;
+                if (this.temperature < 10 || this.temperature > 35) healthChange -= 0.5;
+                if (this.pests > 0) healthChange -= this.pests * 0.5;
+                
+                if (this.water > 50 && this.nutrients > 50 && this.sunlight > 50) {
+                    healthChange += 0.2;
+                }
+                
+                this.health = Math.max(0, Math.min(100, this.health + healthChange));
+            }
+
+            updateUI() {
+                this.progressFill.style.width = this.growth + '%';
+                this.updateStatus();
+            }
+
+            updateStatus() {
+                let status = '';
+                const prunedLeaves = this.plant.querySelectorAll('.leaf.pruned').length;
+                
+                if (this.health < 30) {
+                    status = 'Plant is struggling! Check water and clear pests.';
+                } else if (this.water < 30) {
+                    status = 'Plant needs water!';
+                } else if (this.nutrients < 30) {
+                    status = 'Plant needs fertilizer!';
+                } else if (this.growth >= 100) {
+                    status = 'Congratulations! Your plant is fully grown!';
+                } else if (this.pests > 0) {
+                    status = 'Pests detected! Shake to clear them.';
+                } else if (prunedLeaves > 0) {
+                    status = `Plant is growing new leaves! ${prunedLeaves} leaves regrowing...`;
+                } else {
+                    status = `Plant is ${this.health > 80 ? 'thriving' : 'growing'}! Keep caring for it.`;
+                }
+                
+                this.statusText.textContent = status;
+            }
+
+            createFertilizerEffect() {
+                for (let i = 0; i < 8; i++) {
+                    setTimeout(() => {
+                        const effect = document.createElement('div');
+                        effect.className = 'fertilizer-effect';
+                        effect.style.left = Math.random() * 200 + 100 + 'px';
+                        effect.style.top = Math.random() * 100 + 150 + 'px';
+                        this.plantContainer.appendChild(effect);
+                        
+                        setTimeout(() => {
+                            if (effect.parentNode) {
+                                effect.parentNode.removeChild(effect);
+                            }
+                        }, 1500);
+                    }, i * 100);
+                }
+            }
+
+            createPruneEffect() {
+                const effect = document.createElement('div');
+                effect.className = 'prune-effect';
+                effect.style.left = '50%';
+                effect.style.top = '50%';
+                effect.style.transform = 'translate(-50%, -50%)';
+                this.plantContainer.appendChild(effect);
+                
+                setTimeout(() => {
+                    if (effect.parentNode) {
+                        effect.parentNode.removeChild(effect);
+                    }
+                }, 1000);
+            }
+
+            startLeafRegrowthCycle() {
+                this.leafRegrowthTimer = setInterval(() => {
+                    this.checkLeafRegrowth();
+                }, this.isTimelapseActive ? 1000 : 8000); // Faster regrowth during time-lapse
+            }
+
+            checkLeafRegrowth() {
+                const prunedLeaves = this.plant.querySelectorAll('.leaf.pruned');
+                const totalLeaves = this.plant.querySelectorAll('.leaf').length;
+                
+                // Only regrow if we have pruned leaves and plant is healthy enough
+                if (prunedLeaves.length > 0 && this.health > 50 && this.water > 30) {
+                    const timeSinceLastRegrowth = Date.now() - this.lastLeafRegrowth;
+                    const regrowthInterval = this.isTimelapseActive ? 1500 : 12000; // 12 seconds normally, 1.5 seconds in time-lapse
+                    
+                    if (timeSinceLastRegrowth > regrowthInterval) {
+                        this.regrowOneLeaf();
+                        this.lastLeafRegrowth = Date.now();
+                    }
+                }
+            }
+
+            regrowOneLeaf() {
+                const prunedLeaves = this.plant.querySelectorAll('.leaf.pruned');
+                if (prunedLeaves.length > 0) {
+                    // Pick a random pruned leaf to regrow
+                    const randomIndex = Math.floor(Math.random() * prunedLeaves.length);
+                    const leafToRegrow = prunedLeaves[randomIndex];
+                    
+                    // Create regrowth animation
+                    leafToRegrow.style.transition = 'all 1s ease-out';
+                    leafToRegrow.classList.remove('pruned');
+                    
+                    // Remove from pruned list
+                    const leafIndex = this.prunedLeaves.indexOf(leafToRegrow);
+                    if (leafIndex > -1) {
+                        this.prunedLeaves.splice(leafIndex, 1);
+                    }
+                    
+                    // Create sparkle effect for regrowth
+                    this.createLeafRegrowthEffect(leafToRegrow);
+                    
+                    const remainingPruned = this.plant.querySelectorAll('.leaf.pruned').length - 1;
+                    this.showNotification(`New leaf grew! ${remainingPruned} more to regrow.`);
+                    
+                    // Reset transition after animation
+                    setTimeout(() => {
+                        leafToRegrow.style.transition = '';
+                    }, 1000);
+                }
+            }
+
+            createLeafRegrowthEffect(leafElement) {
+                // Get leaf position relative to plant container
+                const leafRect = leafElement.getBoundingClientRect();
+                const containerRect = this.plantContainer.getBoundingClientRect();
+                
+                const relativeX = leafRect.left - containerRect.left + leafRect.width / 2;
+                const relativeY = leafRect.top - containerRect.top + leafRect.height / 2;
+                
+                // Create sparkle effects around the regrowing leaf
+                for (let i = 0; i < 5; i++) {
+                    setTimeout(() => {
+                        const sparkle = document.createElement('div');
+                        sparkle.style.position = 'absolute';
+                        sparkle.style.left = relativeX + (Math.random() - 0.5) * 30 + 'px';
+                        sparkle.style.top = relativeY + (Math.random() - 0.5) * 30 + 'px';
+                        sparkle.style.width = '4px';
+                        sparkle.style.height = '4px';
+                        sparkle.style.background = '#8bc34a';
+                        sparkle.style.borderRadius = '50%';
+                        sparkle.style.animation = 'sparkleGrow 1s ease-out forwards';
+                        sparkle.style.pointerEvents = 'none';
+                        sparkle.style.zIndex = '10';
+                        
+                        this.plantContainer.appendChild(sparkle);
+                        
+                        setTimeout(() => {
+                            if (sparkle.parentNode) {
+                                sparkle.parentNode.removeChild(sparkle);
+                            }
+                        }, 1000);
+                    }, i * 100);
+                }
+            }
+
+            resetPrunedLeaves() {
+                // Reset all pruned leaves when plant grows
+                const prunedLeaves = this.plant.querySelectorAll('.leaf.pruned');
+                prunedLeaves.forEach(leaf => {
+                    leaf.classList.remove('pruned');
+                });
+                this.prunedLeaves = [];
+                this.lastLeafRegrowth = Date.now(); // Reset regrowth timer
+            }
+
+            updateSunlightEffect() {
+                this.plantContainer.classList.remove('low-light', 'high-light');
+                
+                if (this.sunlight < 30) {
+                    this.plantContainer.classList.add('low-light');
+                } else if (this.sunlight > 70) {
+                    this.plantContainer.classList.add('high-light');
+                }
+            }
+
+            bindDragAction(element, callback) {
+                let isDragging = false;
+                let startX = 0;
+                let startY = 0;
+                let hasTriggered = false;
+
+                const handleStart = (e) => {
+                    isDragging = true;
+                    hasTriggered = false;
+                    const touch = e.touches ? e.touches[0] : e;
+                    startX = touch.clientX;
+                    startY = touch.clientY;
+                    element.classList.add('dragging');
+                    
+                    // Show drag target indicator
+                    this.plantContainer.classList.add('drag-target');
+                    this.showNotification('Drag to plant or drag far to trigger action');
+                    
+                    e.preventDefault();
+                };
+
+                const handleMove = (e) => {
+                    if (!isDragging) return;
+                    
+                    const touch = e.touches ? e.touches[0] : e;
+                    const currentX = touch.clientX;
+                    const currentY = touch.clientY;
+                    
+                    // Calculate total drag distance (any direction)
+                    const deltaX = currentX - startX;
+                    const deltaY = currentY - startY;
+                    const totalDistance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+                    
+                    // Check if dragged over plant area
+                    const plantRect = this.plantContainer.getBoundingClientRect();
+                    const isOverPlant = (
+                        currentX >= plantRect.left && 
+                        currentX <= plantRect.right && 
+                        currentY >= plantRect.top && 
+                        currentY <= plantRect.bottom
+                    );
+                    
+                    // Trigger if dragged far enough OR dragged over plant
+                    if ((totalDistance > 50 || isOverPlant) && !hasTriggered) {
+                        hasTriggered = true;
+                        element.classList.add('triggered');
+                        this.showNotification('Action triggered!');
+                        callback();
+                        
+                        // Add visual feedback to plant
+                        this.plantContainer.style.transform = 'scale(1.05)';
+                        setTimeout(() => {
+                            this.plantContainer.style.transform = 'scale(1)';
+                        }, 200);
+                        
+                        // Reset triggered class after animation
+                        setTimeout(() => {
+                            element.classList.remove('triggered');
+                        }, 500);
+                    }
+                    
+                    e.preventDefault();
+                };
+
+                const handleEnd = (e) => {
+                    if (!isDragging) return;
+                    
+                    isDragging = false;
+                    element.classList.remove('dragging');
+                    
+                    // Remove drag target indicator
+                    this.plantContainer.classList.remove('drag-target');
+                    
+                    // If not triggered by drag, check if it was a tap
+                    if (!hasTriggered) {
+                        const touch = e.changedTouches ? e.changedTouches[0] : e;
+                        const endX = touch.clientX;
+                        const endY = touch.clientY;
+                        const tapDistance = Math.sqrt((endX - startX) * (endX - startX) + (endY - startY) * (endY - startY));
+                        
+                        // If it was a small movement (tap), trigger the action
+                        if (tapDistance < 10) {
+                            callback();
+                            element.classList.add('triggered');
+                            setTimeout(() => {
+                                element.classList.remove('triggered');
+                            }, 500);
+                        }
+                    }
+                    
+                    e.preventDefault();
+                };
+
+                // Touch events
+                element.addEventListener('touchstart', handleStart, { passive: false });
+                element.addEventListener('touchmove', handleMove, { passive: false });
+                element.addEventListener('touchend', handleEnd, { passive: false });
+                element.addEventListener('touchcancel', handleEnd, { passive: false });
+                
+                // Mouse events for desktop
+                element.addEventListener('mousedown', (e) => {
+                    handleStart(e);
+                    
+                    const mouseMoveHandler = (e) => handleMove(e);
+                    const mouseUpHandler = (e) => {
+                        handleEnd(e);
+                        document.removeEventListener('mousemove', mouseMoveHandler);
+                        document.removeEventListener('mouseup', mouseUpHandler);
+                    };
+                    
+                    document.addEventListener('mousemove', mouseMoveHandler);
+                    document.addEventListener('mouseup', mouseUpHandler);
+                });
+            }
+
+            showNotification(message) {
+                this.notification.textContent = message;
+                this.notification.classList.add('show');
+                
+                setTimeout(() => {
+                    this.notification.classList.remove('show');
+                }, 3000);
+            }
+        }
+
+        // Initialize the simulation when the page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            new PlantSimulation();
+        });
+
+        // Request permission for device motion on iOS
+        if (typeof DeviceMotionEvent.requestPermission === 'function') {
+            document.addEventListener('touchstart', () => {
+                DeviceMotionEvent.requestPermission();
+            }, { once: true });
+        }
+  </script>
+</body>
+</html>

@@ -1,0 +1,1081 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Plant Growing Simulation - Tailwind</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Custom animations that can't be replaced with Tailwind */
+        @keyframes leafSway {
+            0%, 100% { transform: rotate(0deg); }
+            50% { transform: rotate(5deg); }
+        }
+
+        @keyframes leafFall {
+            0% {
+                opacity: 1;
+                transform: scale(1) rotate(0deg);
+            }
+            100% {
+                opacity: 0;
+                transform: scale(0) rotate(90deg) translateY(20px);
+            }
+        }
+
+        @keyframes waterDrop {
+            0% {
+                opacity: 1;
+                transform: translateY(-50px) rotate(-45deg);
+            }
+            100% {
+                opacity: 0;
+                transform: translateY(50px) rotate(-45deg);
+            }
+        }
+
+        @keyframes fertilizerSparkle {
+            0% {
+                opacity: 1;
+                transform: translateY(0px) scale(1);
+            }
+            50% {
+                opacity: 0.8;
+                transform: translateY(-30px) scale(1.5);
+            }
+            100% {
+                opacity: 0;
+                transform: translateY(-60px) scale(0.5);
+            }
+        }
+
+        @keyframes pruneGlow {
+            0% {
+                opacity: 1;
+                transform: scale(0);
+            }
+            50% {
+                opacity: 0.8;
+                transform: scale(2);
+            }
+            100% {
+                opacity: 0;
+                transform: scale(3);
+            }
+        }
+
+        @keyframes sparkleGrow {
+            0% {
+                opacity: 1;
+                transform: scale(0);
+            }
+            50% {
+                opacity: 0.8;
+                transform: scale(2);
+            }
+            100% {
+                opacity: 0;
+                transform: scale(0);
+            }
+        }
+
+        @keyframes targetPulse {
+            0%, 100% { border-color: #8bc34a; }
+            50% { border-color: #7cb342; }
+        }
+
+        @keyframes pestMove {
+            0%, 100% { transform: translate(0, 0); }
+            50% { transform: translate(10px, -5px); }
+        }
+
+        @keyframes triggerPulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.2); }
+            100% { transform: scale(1); }
+        }
+
+        /* Complex custom styles */
+        .leaf {
+            animation: leafSway 3s ease-in-out infinite;
+        }
+
+        .leaf.pruned {
+            animation: leafFall 0.5s ease-out forwards;
+        }
+
+        .leaf.left {
+            animation-delay: -0.5s;
+        }
+
+        .leaf.right {
+            animation-delay: -1s;
+        }
+
+        .leaf.top {
+            animation-delay: -1.5s;
+        }
+
+        .water-drop {
+            animation: waterDrop 1s ease-out;
+        }
+
+        .fertilizer-effect {
+            animation: fertilizerSparkle 1.5s ease-out;
+        }
+
+        .prune-effect {
+            animation: pruneGlow 1s ease-out;
+        }
+
+        .drag-target {
+            border: 3px dashed #8bc34a;
+            animation: targetPulse 1s ease-in-out infinite;
+        }
+
+        .pest {
+            animation: pestMove 2s ease-in-out infinite;
+        }
+
+        .triggered {
+            animation: triggerPulse 0.5s ease-out;
+        }
+
+        /* Slider custom styles */
+        .slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #8bc34a 0%, #7cb342 100%);
+            cursor: pointer;
+            box-shadow: 0 2px 8px rgba(123, 179, 66, 0.4);
+        }
+
+                 /* Mobile responsiveness */
+         @media (max-width: 480px) {
+             .drag-controls {
+                 flex-direction: column !important;
+                 gap: 15px !important;
+                 align-items: center !important;
+             }
+
+             .drag-btn {
+                 width: 200px !important;
+                 height: 60px !important;
+                 flex-direction: row !important;
+                 gap: 10px !important;
+                 padding: 8px 16px !important;
+             }
+
+             .drag-btn div {
+                 font-size: 12px !important;
+                 line-height: 1.2 !important;
+                 white-space: nowrap !important;
+                 flex-shrink: 0 !important;
+                 font-weight: 600 !important;
+             }
+
+             .drag-btn svg {
+                 width: 28px !important;
+                 height: 28px !important;
+                 flex-shrink: 0 !important;
+             }
+         }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-gray-100 to-green-100 min-h-screen font-sans select-none overflow-x-hidden">
+    <div class="max-w-sm mx-auto p-5 min-h-screen flex flex-col">
+        <!-- Header -->
+        <div class="text-center mb-5">
+            <h1 class="text-green-800 text-2xl font-semibold mb-2">Plant Growing Simulation</h1>
+        </div>
+
+        <!-- Plant Container -->
+        <div id="plantContainer" class="bg-gradient-to-br from-amber-700 to-amber-600 rounded-3xl p-8 mb-5 shadow-xl relative overflow-hidden min-h-[280px] flex flex-col items-center justify-end transition-all duration-500">
+            <!-- Soil -->
+            <div class="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-br from-amber-800 to-amber-700 rounded-b-3xl"></div>
+            
+            <!-- Plant -->
+            <div id="plant" class="relative z-10 cursor-grab transition-transform duration-300 plant stage-1" style="transform-origin: bottom center;">
+                <div class="stem w-1.5 bg-gradient-to-br from-green-600 to-green-400 rounded-full transition-all duration-1000 relative mx-auto" style="height: 20px;">
+                    <div class="leaves absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
+                        <div class="leaf absolute w-6 h-4 bg-gradient-to-br from-green-500 to-green-400 rounded-tl-full rounded-br-md opacity-100 scale-100 transition-all duration-500 -left-8" style="transform-origin: right center;"></div>
+                        <div class="leaf right absolute w-6 h-4 bg-gradient-to-br from-green-500 to-green-400 rounded-tl-full rounded-br-md opacity-100 scale-100 transition-all duration-500 -right-8" style="transform-origin: left center;"></div>
+                        <div class="leaf top absolute w-6 h-4 bg-gradient-to-br from-green-500 to-green-400 rounded-tl-full rounded-br-md opacity-100 scale-100 transition-all duration-500 -top-5" style="transform-origin: bottom center;"></div>
+                    </div>
+                    <div class="flower absolute -top-2 left-1/2 transform -translate-x-1/2 w-5 h-5 bg-gradient-to-r from-yellow-300 to-yellow-400 rounded-full opacity-0 transition-opacity duration-1000 border border-yellow-600"></div>
+                </div>
+            </div>
+            
+            <!-- Pest Overlay -->
+            <div id="pestOverlay" class="absolute inset-0 pointer-events-none z-30"></div>
+        </div>
+
+        <!-- Progress Section -->
+        <div class="bg-white bg-opacity-90 rounded-2xl p-5 mb-5 shadow-md">
+            <div class="text-green-800 text-sm font-medium mb-2">Growth Progress</div>
+            <div class="w-full h-2 bg-gray-200 rounded-full overflow-hidden">
+                <div id="progressFill" class="h-full bg-gradient-to-r from-green-500 to-green-400 rounded-full transition-all duration-500 w-0"></div>
+            </div>
+        </div>
+
+        <!-- Controls -->
+        <div class="flex flex-col gap-4 mb-5">
+            <!-- Drag Controls -->
+            <div class="flex justify-around gap-5 mb-4">
+                <button id="waterBtn" class="drag-btn w-20 h-32 border-none rounded-3xl text-white text-xs font-semibold cursor-grab transition-all duration-300 flex flex-col items-center justify-center gap-2 relative overflow-hidden bg-gradient-to-br from-blue-500 to-blue-700 shadow-lg hover:shadow-xl">
+                    <svg class="w-8 h-8 fill-current" viewBox="0 0 24 24">
+                        <path d="M12,20A6,6 0 0,1 6,14C6,10 12,3.25 12,3.25S18,10 18,14A6,6 0 0,1 12,20Z"/>
+                    </svg>
+                    <div class="text-[9px] text-center leading-tight px-1">Water</div>
+                </button>
+                
+                <button id="fertilizeBtn" class="drag-btn w-20 h-32 border-none rounded-3xl text-white text-xs font-semibold cursor-grab transition-all duration-300 flex flex-col items-center justify-center gap-2 relative overflow-hidden bg-gradient-to-br from-orange-500 to-red-600 shadow-lg hover:shadow-xl">
+                    <svg class="w-8 h-8 fill-current" viewBox="0 0 24 24">
+                        <path d="M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M12,4A8,8 0 0,1 20,12A8,8 0 0,1 12,20A8,8 0 0,1 4,12A8,8 0 0,1 12,4M11,6V9H8V11H11V14H13V11H16V9H13V6H11Z"/>
+                    </svg>
+                    <div class="text-[9px] text-center leading-tight px-1">Fertilize</div>
+                </button>
+                
+                <button id="pruneBtn" class="drag-btn w-20 h-32 border-none rounded-3xl text-white text-xs font-semibold cursor-grab transition-all duration-300 flex flex-col items-center justify-center gap-2 relative overflow-hidden bg-gradient-to-br from-purple-500 to-purple-700 shadow-lg hover:shadow-xl">
+                    <svg class="w-8 h-8 fill-current" viewBox="0 0 24 24">
+                        <path d="M9,3V4H4V6H5V19A2,2 0 0,0 7,21H17A2,2 0 0,0 19,19V6H20V4H15V3H9M7,6H17V19H7V6M9,8V17H11V8H9M13,8V17H15V8H13Z"/>
+                    </svg>
+                    <div class="text-[9px] text-center leading-tight px-1">Prune</div>
+                </button>
+            </div>
+            
+            <!-- Regular Controls -->
+            <div class="flex justify-center">
+                <button id="timelapseBtn" class="bg-gradient-to-br from-blue-400 to-blue-600 text-white border-none rounded-2xl px-8 py-4 text-sm font-medium cursor-pointer transition-all duration-300 shadow-md hover:shadow-lg flex items-center justify-center gap-2">
+                    <svg class="w-5 h-5 fill-current" viewBox="0 0 24 24">
+                        <path d="M15,1H9V3H15M11,14H13V8H11M19.03,7.39L20.45,5.97C20,5.46 19.55,5 19.04,4.56L17.62,6C16.07,4.74 14.12,4 12,4A9,9 0 0,0 3,13A9,9 0 0,0 12,22C17,22 21,17.97 21,13C21,10.88 20.26,8.93 19.03,7.39Z"/>
+                    </svg>
+                    <span id="timelapseText">Start Time-lapse</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Environment -->
+        <div class="bg-white bg-opacity-90 rounded-2xl p-5 mb-5 shadow-md">
+            <div class="text-green-800 text-base font-semibold mb-4">Environment</div>
+            
+            <!-- Sunlight Slider -->
+            <div class="mb-5">
+                <div class="text-gray-600 text-xs mb-2 flex items-center gap-2">
+                    <svg class="w-4 h-4 fill-current" viewBox="0 0 24 24">
+                        <path d="M12,8A4,4 0 0,0 8,12A4,4 0 0,0 12,16A4,4 0 0,0 16,12A4,4 0 0,0 12,8M12,18A6,6 0 0,1 6,12A6,6 0 0,1 12,6A6,6 0 0,1 18,12A6,6 0 0,1 12,18M20,8.69V4H15.31L12,0.69L8.69,4H4V8.69L0.69,12L4,15.31V20H8.69L12,23.31L15.31,20H20V15.31L23.31,12L20,8.69Z"/>
+                    </svg>
+                    Sunlight: <span id="sunlightValue" class="font-medium">50%</span>
+                </div>
+                <input type="range" id="sunlightSlider" min="0" max="100" value="50" class="slider w-full h-1.5 rounded-full bg-gray-200 outline-none appearance-none">
+            </div>
+            
+            <!-- Temperature Dial -->
+            <div class="mb-5">
+                <div class="text-gray-600 text-xs mb-2 flex items-center gap-2">
+                    <svg class="w-4 h-4 fill-current" viewBox="0 0 24 24">
+                        <path d="M15,13V5A3,3 0 0,0 9,5V13A5,5 0 0,0 12,18A5,5 0 0,0 15,13M12,2A6,6 0 0,1 18,8V13A6,6 0 0,1 6,13V8A6,6 0 0,1 12,2Z"/>
+                    </svg>
+                    Temperature
+                </div>
+                <div id="tempDial" class="relative w-20 h-20 mx-auto cursor-pointer">
+                    <div class="w-full h-full rounded-full bg-gradient-to-br from-blue-100 to-blue-200 shadow-inner flex items-center justify-center relative z-10">
+                        <div id="tempValue" class="text-xs font-semibold text-green-800 relative z-30">20°C</div>
+                    </div>
+                    <div id="dialPointer" class="absolute top-1 left-1/2 w-0.5 h-9 bg-red-600 rounded-full z-10 transition-transform duration-300" style="transform-origin: 50% 35px; transform: translateX(-50%) rotate(0deg);"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Status -->
+        <div class="bg-white bg-opacity-90 rounded-2xl p-4 text-center shadow-md">
+            <div id="statusText" class="text-green-800 text-sm font-medium">Tap water to help your plant grow!</div>
+            <div class="text-gray-600 text-xs mt-1">Shake device to clear pests</div>
+        </div>
+    </div>
+
+    <!-- Notifications -->
+    <div id="notification" class="fixed top-5 left-1/2 transform -translate-x-1/2 bg-green-800 bg-opacity-95 text-white px-5 py-2 rounded-3xl text-sm z-50 opacity-0 transition-opacity duration-300"></div>
+    <div id="shakeIndicator" class="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-red-600 bg-opacity-90 text-white p-5 rounded-2xl text-base font-semibold z-50 opacity-0 transition-opacity duration-300">Shake detected! Clearing pests...</div>
+
+    <script>
+        class PlantSimulation {
+            constructor() {
+                this.growth = 0;
+                this.stage = 1;
+                this.water = 50;
+                this.nutrients = 50;
+                this.sunlight = 50;
+                this.temperature = 20;
+                this.health = 100;
+                this.pests = 0;
+                this.lastWatered = Date.now();
+                this.lastFertilized = Date.now();
+                this.rotationX = 0;
+                this.rotationY = 0;
+                this.isTimelapseActive = false;
+                this.prunedLeaves = [];
+                this.growthInterval = null;
+                this.timelapseText = null;
+                this.leafRegrowthTimer = null;
+                this.lastLeafRegrowth = Date.now();
+                
+                this.initializeElements();
+                this.bindEvents();
+                this.startGrowthCycle();
+                this.startLeafRegrowthCycle();
+                this.initializeShakeDetection();
+            }
+
+            initializeElements() {
+                this.plant = document.getElementById('plant');
+                this.plantContainer = document.getElementById('plantContainer');
+                this.progressFill = document.getElementById('progressFill');
+                this.waterBtn = document.getElementById('waterBtn');
+                this.fertilizeBtn = document.getElementById('fertilizeBtn');
+                this.pruneBtn = document.getElementById('pruneBtn');
+                this.timelapseBtn = document.getElementById('timelapseBtn');
+                this.sunlightSlider = document.getElementById('sunlightSlider');
+                this.sunlightValue = document.getElementById('sunlightValue');
+                this.tempDial = document.getElementById('tempDial');
+                this.tempValue = document.getElementById('tempValue');
+                this.dialPointer = document.getElementById('dialPointer');
+                this.statusText = document.getElementById('statusText');
+                this.notification = document.getElementById('notification');
+                this.pestOverlay = document.getElementById('pestOverlay');
+                this.shakeIndicator = document.getElementById('shakeIndicator');
+                this.timelapseText = document.getElementById('timelapseText');
+            }
+
+            bindEvents() {
+                // Touch drag events for watering
+                this.bindDragAction(this.waterBtn, () => {
+                    this.waterPlant();
+                    return true;
+                });
+
+                // Touch drag events for fertilizing
+                this.bindDragAction(this.fertilizeBtn, () => {
+                    this.fertilizePlant();
+                    return true;
+                });
+
+                // Touch drag events for pruning
+                this.bindDragAction(this.pruneBtn, () => {
+                    this.prunePlant();
+                    return true;
+                });
+
+                // Time-lapse
+                this.timelapseBtn.addEventListener('touchstart', (e) => {
+                    e.preventDefault();
+                    this.toggleTimelapse();
+                });
+                this.timelapseBtn.addEventListener('click', () => this.toggleTimelapse());
+
+                // Plant rotation
+                this.bindPlantRotation();
+
+                // Environment controls
+                this.sunlightSlider.addEventListener('input', (e) => {
+                    this.sunlight = parseInt(e.target.value);
+                    this.sunlightValue.textContent = this.sunlight + '%';
+                    this.updateSunlightEffect();
+                });
+
+                this.tempDial.addEventListener('touchstart', this.bindTempDial.bind(this));
+                this.tempDial.addEventListener('mousedown', this.bindTempDial.bind(this));
+            }
+
+            bindPlantRotation() {
+                let isDragging = false;
+                let startX, startY;
+
+                const handleStart = (e) => {
+                    isDragging = true;
+                    const touch = e.touches ? e.touches[0] : e;
+                    startX = touch.clientX;
+                    startY = touch.clientY;
+                    e.preventDefault();
+                };
+
+                const handleMove = (e) => {
+                    if (!isDragging) return;
+                    
+                    const touch = e.touches ? e.touches[0] : e;
+                    const deltaX = touch.clientX - startX;
+                    const deltaY = touch.clientY - startY;
+                    
+                    this.rotationY += deltaX * 0.5;
+                    this.rotationX -= deltaY * 0.5;
+                    
+                    this.rotationX = Math.max(-30, Math.min(30, this.rotationX));
+                    this.rotationY = Math.max(-30, Math.min(30, this.rotationY));
+                    
+                    this.plant.style.transform = `rotateX(${this.rotationX}deg) rotateY(${this.rotationY}deg)`;
+                    
+                    startX = touch.clientX;
+                    startY = touch.clientY;
+                    e.preventDefault();
+                };
+
+                const handleEnd = (e) => {
+                    isDragging = false;
+                    e.preventDefault();
+                };
+
+                this.plant.addEventListener('touchstart', handleStart);
+                this.plant.addEventListener('touchmove', handleMove);
+                this.plant.addEventListener('touchend', handleEnd);
+                this.plant.addEventListener('mousedown', handleStart);
+                document.addEventListener('mousemove', handleMove);
+                document.addEventListener('mouseup', handleEnd);
+            }
+
+            bindTempDial() {
+                const handleTempMove = (e) => {
+                    const rect = this.tempDial.getBoundingClientRect();
+                    const centerX = rect.left + rect.width / 2;
+                    const centerY = rect.top + rect.height / 2;
+                    
+                    const touch = e.touches ? e.touches[0] : e;
+                    const angle = Math.atan2(touch.clientY - centerY, touch.clientX - centerX);
+                    const degrees = (angle * 180 / Math.PI + 90 + 360) % 360;
+                    
+                    this.temperature = Math.round(degrees / 360 * 40 + 5); // 5-45°C range
+                    this.tempValue.textContent = this.temperature + '°C';
+                    this.dialPointer.style.transform = `translateX(-50%) rotate(${degrees}deg)`;
+                };
+
+                const handleTempEnd = () => {
+                    document.removeEventListener('touchmove', handleTempMove);
+                    document.removeEventListener('touchend', handleTempEnd);
+                    document.removeEventListener('mousemove', handleTempMove);
+                    document.removeEventListener('mouseup', handleTempEnd);
+                };
+
+                document.addEventListener('touchmove', handleTempMove);
+                document.addEventListener('touchend', handleTempEnd);
+                document.addEventListener('mousemove', handleTempMove);
+                document.addEventListener('mouseup', handleTempEnd);
+            }
+
+            waterPlant() {
+                if (Date.now() - this.lastWatered < 3000) {
+                    this.showNotification('Wait a bit before watering again!');
+                    return;
+                }
+
+                this.water = Math.min(100, this.water + 25);
+                this.lastWatered = Date.now();
+                this.createWaterEffect();
+                this.showNotification('Plant watered! 💧');
+                this.updateStatus();
+            }
+
+                         createWaterEffect() {
+                 for (let i = 0; i < 5; i++) {
+                     setTimeout(() => {
+                         const drop = document.createElement('div');
+                         drop.className = 'water-drop absolute w-2.5 h-2.5 bg-cyan-300 opacity-0 border border-cyan-500';
+                         drop.style.borderRadius = '50% 50% 50% 0';
+                         drop.style.transform = 'rotate(-45deg)';
+                         drop.style.left = Math.random() * 200 + 100 + 'px';
+                         drop.style.top = '50px';
+                         this.plantContainer.appendChild(drop);
+                        
+                        setTimeout(() => {
+                            if (drop.parentNode) {
+                                drop.parentNode.removeChild(drop);
+                            }
+                        }, 1000);
+                    }, i * 200);
+                }
+            }
+
+            fertilizePlant() {
+                if (Date.now() - this.lastFertilized < 10000) {
+                    this.showNotification('Too soon to fertilize again!');
+                    return;
+                }
+
+                this.nutrients = Math.min(100, this.nutrients + 30);
+                this.lastFertilized = Date.now();
+                this.createFertilizerEffect();
+                this.showNotification('Plant fertilized! 🌱');
+                this.updateStatus();
+            }
+
+            prunePlant() {
+                if (this.stage < 2) {
+                    this.showNotification('Plant too small to prune!');
+                    return;
+                }
+
+                const leaves = this.plant.querySelectorAll('.leaf:not(.pruned)');
+                if (leaves.length === 0) {
+                    this.showNotification('No leaves left to prune!');
+                    return;
+                }
+
+                // Prune one random leaf
+                const randomLeaf = leaves[Math.floor(Math.random() * leaves.length)];
+                randomLeaf.classList.add('pruned');
+                this.prunedLeaves.push(randomLeaf);
+
+                this.health = Math.min(100, this.health + 10);
+                this.createPruneEffect();
+                this.showNotification(`Leaf pruned! Health improved! (${leaves.length - 1} leaves remaining)`);
+                this.updateStatus();
+            }
+
+                         toggleTimelapse() {
+                 this.isTimelapseActive = !this.isTimelapseActive;
+                 
+                 if (this.isTimelapseActive) {
+                     this.timelapseBtn.classList.remove('from-blue-400', 'to-blue-600');
+                     this.timelapseBtn.classList.add('from-red-500', 'to-red-700');
+                     this.timelapseText.textContent = 'Stop Time-lapse';
+                    
+                    // Save current state
+                    this.savedState = {
+                        growth: this.growth,
+                        stage: this.stage,
+                        water: this.water,
+                        nutrients: this.nutrients,
+                        health: this.health
+                    };
+                    
+                    // Reset plant to beginning for dramatic visualization
+                    this.resetPlantForTimelapse();
+                    this.showNotification('Time-lapse: Watch complete growth cycle!');
+                                 } else {
+                     this.timelapseBtn.classList.remove('from-red-500', 'to-red-700');
+                     this.timelapseBtn.classList.add('from-blue-400', 'to-blue-600');
+                     this.timelapseText.textContent = 'Start Time-lapse';
+                    
+                    // Restore previous state or keep current if user prefers
+                    if (this.savedState) {
+                        this.restoreFromTimelapse();
+                    }
+                    this.showNotification('Time-lapse stopped - state restored');
+                }
+                
+                // Restart the growth cycle with new timing
+                this.restartGrowthCycle();
+            }
+
+            resetPlantForTimelapse() {
+                // Reset to beginning for full visualization
+                this.growth = 0;
+                this.stage = 1;
+                this.water = 80;      // High water for fast growth
+                this.nutrients = 80;  // High nutrients for fast growth
+                this.health = 100;    // Perfect health
+                this.pests = 0;       // No pests
+                
+                // Reset visual state
+                this.updatePlantStage(1);
+                this.resetPrunedLeaves();
+                this.updateUI();
+                
+                // Clear any existing pests
+                this.pestOverlay.innerHTML = '';
+            }
+
+            restoreFromTimelapse() {
+                // Restore to state before time-lapse (but keep some benefits)
+                this.growth = this.savedState.growth;
+                this.stage = this.savedState.stage;
+                this.water = Math.max(this.savedState.water, this.water);
+                this.nutrients = Math.max(this.savedState.nutrients, this.nutrients);
+                this.health = Math.max(this.savedState.health, this.health);
+                
+                // Update visual state
+                this.updatePlantStage(this.stage);
+                this.updateUI();
+                this.savedState = null;
+            }
+
+            updatePlantStage(stage) {
+                const stem = this.plant.querySelector('.stem');
+                const flower = this.plant.querySelector('.flower');
+                
+                // Update stem height based on stage
+                const heights = { 1: '20px', 2: '40px', 3: '60px', 4: '80px', 5: '100px' };
+                stem.style.height = heights[stage];
+                
+                // Show flower in stages 4 and 5
+                if (stage >= 4) {
+                    flower.classList.remove('opacity-0');
+                    flower.classList.add('opacity-100');
+                } else {
+                    flower.classList.remove('opacity-100');
+                    flower.classList.add('opacity-0');
+                }
+            }
+
+            startGrowthCycle() {
+                this.growthInterval = setInterval(() => {
+                    this.updatePlant();
+                }, this.isTimelapseActive ? 200 : 800);
+            }
+
+            restartGrowthCycle() {
+                if (this.growthInterval) {
+                    clearInterval(this.growthInterval);
+                }
+                if (this.leafRegrowthTimer) {
+                    clearInterval(this.leafRegrowthTimer);
+                }
+                this.startGrowthCycle();
+                this.startLeafRegrowthCycle();
+            }
+
+            startLeafRegrowthCycle() {
+                this.leafRegrowthTimer = setInterval(() => {
+                    this.checkLeafRegrowth();
+                }, this.isTimelapseActive ? 1000 : 8000);
+            }
+
+            updatePlant() {
+                const growthRate = this.calculateGrowthRate();
+                const increment = this.isTimelapseActive ? growthRate * 5 : growthRate;
+                
+                this.growth = Math.min(100, this.growth + increment);
+                
+                // Update stage based on growth
+                const newStage = Math.min(5, Math.floor(this.growth / 20) + 1);
+                if (newStage !== this.stage) {
+                    this.stage = newStage;
+                    this.updatePlantStage(this.stage);
+                    this.showNotification(`Plant reached stage ${this.stage}!`);
+                    
+                    // Reset pruned leaves when growing to new stage
+                    this.resetPrunedLeaves();
+                }
+
+                // Decay resources
+                this.water = Math.max(0, this.water - (this.isTimelapseActive ? 2 : 0.5));
+                this.nutrients = Math.max(0, this.nutrients - (this.isTimelapseActive ? 1 : 0.25));
+
+                // Health calculation
+                this.calculateHealth();
+
+                // Random pest spawn
+                if (Math.random() < 0.05 && this.health < 70) {
+                    this.spawnPests();
+                }
+
+                this.updateUI();
+            }
+
+            calculateGrowthRate() {
+                let rate = 1.2;
+                
+                // Water factor
+                if (this.water > 70) rate *= 1.5;
+                else if (this.water < 30) rate *= 0.5;
+                
+                // Nutrient factor
+                if (this.nutrients > 70) rate *= 1.3;
+                else if (this.nutrients < 30) rate *= 0.7;
+                
+                // Sunlight factor
+                if (this.sunlight > 70) rate *= 1.2;
+                else if (this.sunlight < 30) rate *= 0.8;
+                
+                // Temperature factor
+                if (this.temperature >= 18 && this.temperature <= 25) rate *= 1.2;
+                else if (this.temperature < 10 || this.temperature > 35) rate *= 0.5;
+                
+                // Health factor
+                rate *= (this.health / 100);
+                
+                return rate;
+            }
+
+            calculateHealth() {
+                let healthChange = 0;
+                
+                if (this.water < 20) healthChange -= 1;
+                if (this.nutrients < 20) healthChange -= 0.5;
+                if (this.temperature < 10 || this.temperature > 35) healthChange -= 0.5;
+                if (this.pests > 0) healthChange -= this.pests * 0.5;
+                
+                if (this.water > 50 && this.nutrients > 50 && this.sunlight > 50) {
+                    healthChange += 0.2;
+                }
+                
+                this.health = Math.max(0, Math.min(100, this.health + healthChange));
+            }
+
+            updateUI() {
+                this.progressFill.style.width = this.growth + '%';
+                this.updateStatus();
+            }
+
+            updateStatus() {
+                let status = '';
+                const prunedLeaves = this.plant.querySelectorAll('.leaf.pruned').length;
+                
+                if (this.health < 30) {
+                    status = 'Plant is struggling! Check water and clear pests.';
+                } else if (this.water < 30) {
+                    status = 'Plant needs water!';
+                } else if (this.nutrients < 30) {
+                    status = 'Plant needs fertilizer!';
+                } else if (this.growth >= 100) {
+                    status = 'Congratulations! Your plant is fully grown!';
+                } else if (this.pests > 0) {
+                    status = 'Pests detected! Shake to clear them.';
+                } else if (prunedLeaves > 0) {
+                    status = `Plant is growing new leaves! ${prunedLeaves} leaves regrowing...`;
+                } else {
+                    status = `Plant is ${this.health > 80 ? 'thriving' : 'growing'}! Keep caring for it.`;
+                }
+                
+                this.statusText.textContent = status;
+            }
+
+            checkLeafRegrowth() {
+                const prunedLeaves = this.plant.querySelectorAll('.leaf.pruned');
+                
+                if (prunedLeaves.length > 0 && this.health > 50 && this.water > 30) {
+                    const timeSinceLastRegrowth = Date.now() - this.lastLeafRegrowth;
+                    const regrowthInterval = this.isTimelapseActive ? 1500 : 12000;
+                    
+                    if (timeSinceLastRegrowth > regrowthInterval) {
+                        this.regrowOneLeaf();
+                        this.lastLeafRegrowth = Date.now();
+                    }
+                }
+            }
+
+            regrowOneLeaf() {
+                const prunedLeaves = this.plant.querySelectorAll('.leaf.pruned');
+                if (prunedLeaves.length > 0) {
+                    const randomIndex = Math.floor(Math.random() * prunedLeaves.length);
+                    const leafToRegrow = prunedLeaves[randomIndex];
+                    
+                    leafToRegrow.style.transition = 'all 1s ease-out';
+                    leafToRegrow.classList.remove('pruned');
+                    
+                    const leafIndex = this.prunedLeaves.indexOf(leafToRegrow);
+                    if (leafIndex > -1) {
+                        this.prunedLeaves.splice(leafIndex, 1);
+                    }
+                    
+                    this.createLeafRegrowthEffect(leafToRegrow);
+                    
+                    const remainingPruned = this.plant.querySelectorAll('.leaf.pruned').length - 1;
+                    this.showNotification(`New leaf grew! ${remainingPruned} more to regrow.`);
+                    
+                    setTimeout(() => {
+                        leafToRegrow.style.transition = '';
+                    }, 1000);
+                }
+            }
+
+            createLeafRegrowthEffect(leafElement) {
+                const leafRect = leafElement.getBoundingClientRect();
+                const containerRect = this.plantContainer.getBoundingClientRect();
+                
+                const relativeX = leafRect.left - containerRect.left + leafRect.width / 2;
+                const relativeY = leafRect.top - containerRect.top + leafRect.height / 2;
+                
+                for (let i = 0; i < 5; i++) {
+                    setTimeout(() => {
+                        const sparkle = document.createElement('div');
+                        sparkle.className = 'absolute w-1 h-1 bg-green-400 rounded-full pointer-events-none z-10';
+                        sparkle.style.left = relativeX + (Math.random() - 0.5) * 30 + 'px';
+                        sparkle.style.top = relativeY + (Math.random() - 0.5) * 30 + 'px';
+                        sparkle.style.animation = 'sparkleGrow 1s ease-out forwards';
+                        
+                        this.plantContainer.appendChild(sparkle);
+                        
+                        setTimeout(() => {
+                            if (sparkle.parentNode) {
+                                sparkle.parentNode.removeChild(sparkle);
+                            }
+                        }, 1000);
+                    }, i * 100);
+                }
+            }
+
+            resetPrunedLeaves() {
+                const prunedLeaves = this.plant.querySelectorAll('.leaf.pruned');
+                prunedLeaves.forEach(leaf => {
+                    leaf.classList.remove('pruned');
+                });
+                this.prunedLeaves = [];
+                this.lastLeafRegrowth = Date.now();
+            }
+
+                         createFertilizerEffect() {
+                 for (let i = 0; i < 8; i++) {
+                     setTimeout(() => {
+                         const effect = document.createElement('div');
+                         effect.className = 'fertilizer-effect absolute w-2 h-2 bg-yellow-400 rounded-full opacity-0 border border-yellow-600';
+                         effect.style.left = Math.random() * 200 + 100 + 'px';
+                         effect.style.top = Math.random() * 100 + 150 + 'px';
+                         this.plantContainer.appendChild(effect);
+                         
+                         setTimeout(() => {
+                             if (effect.parentNode) {
+                                 effect.parentNode.removeChild(effect);
+                             }
+                         }, 1500);
+                     }, i * 100);
+                 }
+             }
+
+            createPruneEffect() {
+                const effect = document.createElement('div');
+                effect.className = 'prune-effect absolute w-4 h-4 bg-purple-500 rounded-full opacity-0';
+                effect.style.left = '50%';
+                effect.style.top = '50%';
+                effect.style.transform = 'translate(-50%, -50%)';
+                this.plantContainer.appendChild(effect);
+                
+                setTimeout(() => {
+                    if (effect.parentNode) {
+                        effect.parentNode.removeChild(effect);
+                    }
+                }, 1000);
+            }
+
+            updateSunlightEffect() {
+                this.plantContainer.classList.remove('brightness-75', 'contrast-75', 'brightness-125', 'contrast-110');
+                
+                if (this.sunlight < 30) {
+                    this.plantContainer.classList.add('brightness-75', 'contrast-75');
+                } else if (this.sunlight > 70) {
+                    this.plantContainer.classList.add('brightness-125', 'contrast-110');
+                }
+            }
+
+            bindDragAction(element, callback) {
+                let isDragging = false;
+                let startX = 0;
+                let startY = 0;
+                let hasTriggered = false;
+
+                const handleStart = (e) => {
+                    isDragging = true;
+                    hasTriggered = false;
+                    const touch = e.touches ? e.touches[0] : e;
+                    startX = touch.clientX;
+                    startY = touch.clientY;
+                    element.classList.add('scale-110', '-translate-y-2', 'shadow-2xl');
+                    
+                    // Show drag target indicator
+                    this.plantContainer.classList.add('drag-target');
+                    this.showNotification('Drag to plant or drag far to trigger action');
+                    
+                    e.preventDefault();
+                };
+
+                const handleMove = (e) => {
+                    if (!isDragging) return;
+                    
+                    const touch = e.touches ? e.touches[0] : e;
+                    const currentX = touch.clientX;
+                    const currentY = touch.clientY;
+                    
+                    const deltaX = currentX - startX;
+                    const deltaY = currentY - startY;
+                    const totalDistance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+                    
+                    const plantRect = this.plantContainer.getBoundingClientRect();
+                    const isOverPlant = (
+                        currentX >= plantRect.left && 
+                        currentX <= plantRect.right && 
+                        currentY >= plantRect.top && 
+                        currentY <= plantRect.bottom
+                    );
+                    
+                    if ((totalDistance > 50 || isOverPlant) && !hasTriggered) {
+                        hasTriggered = true;
+                        element.classList.add('triggered');
+                        this.showNotification('Action triggered!');
+                        callback();
+                        
+                        this.plantContainer.style.transform = 'scale(1.05)';
+                        setTimeout(() => {
+                            this.plantContainer.style.transform = 'scale(1)';
+                        }, 200);
+                        
+                        setTimeout(() => {
+                            element.classList.remove('triggered');
+                        }, 500);
+                    }
+                    
+                    e.preventDefault();
+                };
+
+                const handleEnd = (e) => {
+                    if (!isDragging) return;
+                    
+                    isDragging = false;
+                    element.classList.remove('scale-110', '-translate-y-2', 'shadow-2xl');
+                    this.plantContainer.classList.remove('drag-target');
+                    
+                    if (!hasTriggered) {
+                        const touch = e.changedTouches ? e.changedTouches[0] : e;
+                        const endX = touch.clientX;
+                        const endY = touch.clientY;
+                        const tapDistance = Math.sqrt((endX - startX) * (endX - startX) + (endY - startY) * (endY - startY));
+                        
+                        if (tapDistance < 10) {
+                            callback();
+                            element.classList.add('triggered');
+                            setTimeout(() => {
+                                element.classList.remove('triggered');
+                            }, 500);
+                        }
+                    }
+                    
+                    e.preventDefault();
+                };
+
+                element.addEventListener('touchstart', handleStart, { passive: false });
+                element.addEventListener('touchmove', handleMove, { passive: false });
+                element.addEventListener('touchend', handleEnd, { passive: false });
+                element.addEventListener('touchcancel', handleEnd, { passive: false });
+                
+                element.addEventListener('mousedown', (e) => {
+                    handleStart(e);
+                    
+                    const mouseMoveHandler = (e) => handleMove(e);
+                    const mouseUpHandler = (e) => {
+                        handleEnd(e);
+                        document.removeEventListener('mousemove', mouseMoveHandler);
+                        document.removeEventListener('mouseup', mouseUpHandler);
+                    };
+                    
+                    document.addEventListener('mousemove', mouseMoveHandler);
+                    document.addEventListener('mouseup', mouseUpHandler);
+                });
+            }
+
+            initializeShakeDetection() {
+                if (!window.DeviceMotionEvent) {
+                    console.log('DeviceMotionEvent not supported');
+                    return;
+                }
+
+                let lastUpdate = 0;
+                let lastX = 0, lastY = 0, lastZ = 0;
+                let shakeCount = 0;
+                let shakeTimeout = null;
+
+                const handleMotion = (e) => {
+                    const current = Date.now();
+                    if (current - lastUpdate < 100) return;
+
+                    const diffTime = current - lastUpdate;
+                    lastUpdate = current;
+
+                    const acceleration = e.accelerationIncludingGravity;
+                    if (!acceleration) return;
+
+                    const x = acceleration.x || 0;
+                    const y = acceleration.y || 0;
+                    const z = acceleration.z || 0;
+
+                    const speed = Math.abs(x + y + z - lastX - lastY - lastZ) / diffTime * 10000;
+
+                    if (speed > 500) {
+                        shakeCount++;
+                        
+                        if (shakeCount === 1) {
+                            this.showShakeIndicator();
+                        }
+                        
+                        if (shakeCount >= 2) {
+                            this.clearPests();
+                            shakeCount = 0;
+                        }
+                        
+                        clearTimeout(shakeTimeout);
+                        shakeTimeout = setTimeout(() => {
+                            shakeCount = 0;
+                        }, 1000);
+                    }
+
+                    lastX = x;
+                    lastY = y;
+                    lastZ = z;
+                };
+
+                window.addEventListener('devicemotion', handleMotion);
+                
+                if (!navigator.userAgent.match(/Mobile|Android|iPhone|iPad/)) {
+                    document.addEventListener('keydown', (e) => {
+                        if (e.key === 's' || e.key === 'S') {
+                            this.showShakeIndicator();
+                            this.clearPests();
+                        }
+                    });
+                    this.showNotification('Desktop: Press "S" key to simulate shake');
+                }
+            }
+
+            clearPests() {
+                if (this.pests > 0) {
+                    this.pests = 0;
+                    this.pestOverlay.innerHTML = '';
+                    this.health = Math.min(100, this.health + 20);
+                    this.showNotification('Pests cleared! 🎉');
+                    this.updateStatus();
+                } else {
+                    this.showNotification('No pests to clear!');
+                }
+            }
+
+            showShakeIndicator() {
+                this.shakeIndicator.classList.add('opacity-100');
+                setTimeout(() => {
+                    this.shakeIndicator.classList.remove('opacity-100');
+                }, 1500);
+            }
+
+                         spawnPests() {
+                 if (this.pests >= 3) return;
+
+                 this.pests++;
+                 const pest = document.createElement('div');
+                 pest.className = 'pest absolute w-2 h-2 bg-red-800 rounded-full border border-red-900';
+                 pest.style.left = Math.random() * 80 + 10 + '%';
+                 pest.style.top = Math.random() * 60 + 20 + '%';
+                 this.pestOverlay.appendChild(pest);
+             }
+
+            showNotification(message) {
+                this.notification.textContent = message;
+                this.notification.classList.add('opacity-100');
+                
+                setTimeout(() => {
+                    this.notification.classList.remove('opacity-100');
+                }, 3000);
+            }
+        }
+
+        // Initialize the simulation when the page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            new PlantSimulation();
+        });
+
+        // Request permission for device motion on iOS
+        if (typeof DeviceMotionEvent.requestPermission === 'function') {
+            document.addEventListener('touchstart', () => {
+                DeviceMotionEvent.requestPermission();
+            }, { once: true });
+        }
+    </script>
+</body>
+</html>
