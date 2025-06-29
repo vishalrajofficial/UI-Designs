@@ -93,6 +93,25 @@ A charming plant growing simulation with drag-and-drop care mechanics.
 
 ---
 
+### 🧩 Circuit Puzzle
+**Location**: `Puzzle/puzzle.tsx`
+
+An interactive logic puzzle game where players connect circuits by rotating tiles.
+
+**Features**:
+- 🔄 Rotating circuit tiles (straight, corner, T-junction, cross)
+- 🎯 Connect start and end points to complete the circuit
+- ⏱️ Built-in timer to track solving time
+- 🤖 Automatic solution generator with guaranteed solvable puzzles
+- 🎮 Click-to-rotate tile interactions
+- 🌟 Visual feedback for connected paths
+- 🎨 Clean SVG-based graphics and animations
+- 🧠 Pathfinding algorithm validation
+
+**Key Technologies**: React, TypeScript, SVG graphics, algorithm design
+
+---
+
 ## 🎨 Design Philosophy
 
 These components demonstrate:
@@ -103,6 +122,7 @@ These components demonstrate:
 - **Accessibility**: Semantic HTML and keyboard navigation support
 - **Modern Aesthetics**: Clean, contemporary design language
 - **User Feedback**: Visual and haptic feedback for all interactions
+- **Game Mechanics**: Interactive elements that encourage exploration
 
 ## 🛠️ Technologies Used
 
@@ -110,6 +130,7 @@ These components demonstrate:
 - **Styling**: Tailwind CSS, Custom CSS animations
 - **Graphics**: SVG animations, Canvas (where applicable)
 - **State Management**: React Hooks, localStorage
+- **Algorithms**: Pathfinding, validation logic
 - **Build Tools**: Modern ES6+ features
 
 ## 📱 Browser Support
@@ -135,6 +156,9 @@ Import the desired component and include it in your React application:
 ```tsx
 import DailyQuiz from './DailyQuiz/DailyQuiz';
 import Dashboard from './FinancePortfolio/Dashboard';
+import PetSimulation from './PetSimulation/petSimulation';
+import TimeWheel from './TimeWheel/TimeWheel';
+import CircuitPuzzle from './Puzzle/puzzle';
 // ... other imports
 
 function App() {
@@ -142,11 +166,23 @@ function App() {
     <div>
       <DailyQuiz />
       <Dashboard />
+      <PetSimulation />
+      <TimeWheel />
+      <CircuitPuzzle />
       {/* ... other components */}
     </div>
   );
 }
 ```
+
+## 🎮 Interactive Features
+
+- **Daily Quiz**: Educational quiz with progress tracking
+- **Finance Dashboard**: Real-time market simulation
+- **Pet Care**: Virtual pet management game
+- **Time Management**: Visual schedule planning tool
+- **Plant Care**: Drag-and-drop gardening simulation
+- **Circuit Puzzle**: Logic-based connection game
 
 ## 📄 License
 
