@@ -1,6 +1,6 @@
 # UI Design Collection
 
-A comprehensive collection of 9 interactive React components and web applications showcasing modern UI/UX design patterns, engaging user experiences, and cutting-edge web technologies.
+A comprehensive collection of 10 interactive React components and web applications showcasing modern UI/UX design patterns, engaging user experiences, and cutting-edge web technologies.
 
 ## 🚀 Components Overview
 
@@ -168,6 +168,25 @@ A retro-style arcade typing game where players type falling words before they re
 
 ---
 
+### 🧲 Magnetic Field Visualizer
+**Location**: `magnetSimuation.html`
+
+An interactive physics simulation that visualizes magnetic field lines and forces with real-time calculations.
+
+**Features**:
+- 🔬 Interactive magnetic field visualization with dynamic field lines
+- 🎯 Draggable magnets with customizable strength and polarity
+- 📐 Real-time force and field strength calculations
+- 🎨 Cosmic-themed UI with aurora gradient effects
+- 🔧 Advanced controls for field parameters and visualization options
+- 📱 Fully responsive design with touch-friendly interactions
+- ⚡ Smooth animations with magnetic particle effects
+- 🎮 Educational tool for physics learning and exploration
+
+**Key Technologies**: HTML5 Canvas, Tailwind CSS, JavaScript, CSS animations, Orbitron fonts
+
+---
+
 ## 🎨 Design Philosophy
 
 These components demonstrate:
@@ -243,6 +262,7 @@ function App() {
 - `plantSimulation-tailwind.html` - Plant care game (Tailwind version)
 - `plantSimulation.html` - Plant care game (standard version)
 - `wordTypingGame.html` - Word Cascade retro typing arcade game
+- `magnetSimuation.html` - Magnetic field visualizer and physics simulation
 
 ## 🎮 Interactive Features
 
@@ -255,6 +275,7 @@ function App() {
 - **Plant Care**: Gardening simulation with growth mechanics
 - **Circuit Puzzle**: Logic-based tile rotation puzzle game
 - **Word Cascade**: Retro arcade typing game with falling words
+- **Magnetic Field**: Interactive physics simulation with field visualization
 
 ## 📄 License
 

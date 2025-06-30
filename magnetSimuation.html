@@ -1,0 +1,1356 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Magnetic Field Visualizer</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            'deep-blue': '#003049',
+            'midnight': '#002635',
+            'deep-blue-dark': '#001b2e',
+            'red-accent': '#D62828',
+            'teal-accent': '#2A9D8F',
+            'teal-light': '#46B5A7',
+            'orange-accent': '#F77F00',
+            'yellow-accent': '#FCBF49',
+            'cream-accent': '#EAE2B7'
+          },
+          fontFamily: {
+            'orbitron': ['Orbitron', 'monospace']
+          },
+          backgroundImage: {
+            'aurora': 'linear-gradient(135deg, #2A9D8F 0%, #FCBF49 30%, #F77F00 70%, #D62828 100%)',
+            'deep-space': 'linear-gradient(135deg, #003049 0%, #002635 50%, #001b2e 100%)',
+            'golden-teal': 'linear-gradient(135deg, #FCBF49 0%, #F77F00 30%, #2A9D8F 100%)',
+            'cosmic-glow': 'radial-gradient(circle, rgba(42, 157, 143, 0.3) 0%, rgba(252, 191, 73, 0.1) 50%, transparent 70%)'
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    html, body {
+      touch-action: none;
+      user-select: none;
+      font-family: 'Orbitron', monospace;
+    }
+    
+    /* Enhanced animations */
+    @keyframes fieldPulse {
+      0%, 100% { opacity: 0.8; }
+      50% { opacity: 1; }
+    }
+    
+    @keyframes magnetGlow {
+      0%, 100% { 
+        box-shadow: 0 0 20px rgba(214, 40, 40, 0.3), 0 0 40px rgba(42, 157, 143, 0.3); 
+      }
+      50% { 
+        box-shadow: 0 0 30px rgba(214, 40, 40, 0.5), 0 0 60px rgba(42, 157, 143, 0.5); 
+      }
+    }
+    
+    @keyframes probeGlow {
+      0%, 100% { box-shadow: 0 0 15px rgba(252, 191, 73, 0.6); }
+      50% { box-shadow: 0 0 25px rgba(252, 191, 73, 0.9); }
+    }
+    
+    @keyframes buttonPulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.05); }
+    }
+    
+    .field-animation {
+      animation: fieldPulse 2s ease-in-out infinite;
+    }
+    
+    .magnet-glow {
+      animation: magnetGlow 3s ease-in-out infinite;
+    }
+    
+    .probe-glow {
+      animation: probeGlow 1.5s ease-in-out infinite;
+    }
+    
+    .button-hover {
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      transform-origin: center;
+    }
+    
+    .button-hover:active {
+      transform: scale(0.95);
+      box-shadow: 0 0 20px rgba(247, 127, 0, 0.4);
+    }
+    
+    .button-hover:hover {
+      animation: buttonPulse 0.3s ease-in-out;
+    }
+    
+    .slider-custom {
+      background: linear-gradient(90deg, #2A9D8F 0%, #F77F00 50%, #D62828 100%);
+      border-radius: 10px;
+      height: 8px;
+      outline: none;
+      -webkit-appearance: none;
+      appearance: none;
+    }
+    
+    .slider-custom::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      background: #EAE2B7;
+      border: 2px solid #F77F00;
+      border-radius: 50%;
+      width: 20px;
+      height: 20px;
+      cursor: pointer;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+      transition: all 0.2s ease;
+    }
+    
+    .slider-custom::-webkit-slider-thumb:hover {
+      background: #FCBF49;
+      box-shadow: 0 4px 12px rgba(247, 127, 0, 0.4);
+    }
+    
+    .slider-custom::-moz-range-thumb {
+      background: #EAE2B7;
+      border: 2px solid #F77F00;
+      border-radius: 50%;
+      width: 20px;
+      height: 20px;
+      cursor: pointer;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+      transition: all 0.2s ease;
+    }
+    
+    .controls-container {
+      backdrop-filter: blur(10px);
+      background: rgba(0, 48, 73, 0.85);
+      border: 1px solid rgba(234, 226, 183, 0.2);
+    }
+    
+    /* Responsive Mobile-First Design */
+    .app-container {
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+      height: 100vh;
+      padding: 0;
+      margin: 0;
+      overflow: hidden;
+    }
+    
+    .app-header {
+      background: linear-gradient(135deg, #2A9D8F 0%, #FCBF49 50%, #F77F00 100%);
+      padding: 1rem;
+      text-align: center;
+      box-shadow: 0 4px 20px rgba(42, 157, 143, 0.4);
+      flex-shrink: 0;
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .app-header::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: linear-gradient(45deg, transparent 30%, rgba(234, 226, 183, 0.1) 50%, transparent 70%);
+      animation: shimmer 3s ease-in-out infinite;
+    }
+    
+    @keyframes shimmer {
+      0%, 100% { transform: translateX(-100%); }
+      50% { transform: translateX(100%); }
+    }
+    
+    .app-canvas-container {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1rem;
+      background: 
+        radial-gradient(circle at 20% 30%, rgba(42, 157, 143, 0.15) 0%, transparent 50%),
+        radial-gradient(circle at 80% 70%, rgba(252, 191, 73, 0.1) 0%, transparent 50%),
+        linear-gradient(135deg, #003049 0%, #002635 50%, #003049 100%);
+      overflow: hidden;
+      position: relative;
+    }
+    
+    .app-canvas-container::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: 
+        repeating-linear-gradient(
+          45deg,
+          transparent,
+          transparent 100px,
+          rgba(234, 226, 183, 0.02) 100px,
+          rgba(234, 226, 183, 0.02) 102px
+        );
+      pointer-events: none;
+    }
+    
+    .app-controls {
+      background: 
+        linear-gradient(135deg, 
+          rgba(234, 226, 183, 0.15) 0%,
+          rgba(42, 157, 143, 0.1) 50%,
+          rgba(0, 48, 73, 0.95) 100%
+        );
+      backdrop-filter: blur(20px);
+      padding: 1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      box-shadow: 
+        0 -8px 32px rgba(42, 157, 143, 0.2),
+        0 -4px 16px rgba(0, 0, 0, 0.3);
+      flex-shrink: 0;
+      position: relative;
+    }
+    
+
+    
+    .button-row {
+      display: flex;
+      gap: 0.75rem;
+    }
+    
+    .app-button {
+      flex: 1;
+      padding: 0.75rem 1rem;
+      border-radius: 0.75rem;
+      border: none;
+      font-weight: 600;
+      font-size: 0.875rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      transition: all 0.2s ease;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+      min-height: 48px;
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+      -webkit-touch-callout: none;
+      -webkit-user-select: none;
+      user-select: none;
+      touch-action: manipulation;
+    }
+    
+    .app-button:active {
+      transform: translateY(2px);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+    }
+    
+    .app-button:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.3);
+    }
+    
+    .slider-container {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+    
+    .slider-item {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      padding: 0.75rem;
+      background: 
+        linear-gradient(135deg, 
+          rgba(42, 157, 143, 0.08) 0%,
+          rgba(252, 191, 73, 0.05) 50%,
+          rgba(234, 226, 183, 0.1) 100%
+        );
+      border-radius: 1rem;
+      border: 1px solid rgba(42, 157, 143, 0.2);
+      box-shadow: 
+        inset 0 1px 3px rgba(234, 226, 183, 0.1),
+        0 2px 8px rgba(42, 157, 143, 0.1);
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .slider-item::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: linear-gradient(90deg, 
+        transparent 0%, 
+        rgba(252, 191, 73, 0.05) 50%, 
+        transparent 100%
+      );
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+    
+    .slider-item:hover::before {
+      opacity: 1;
+    }
+    
+    .slider-label {
+      font-size: 0.875rem;
+      font-weight: 700;
+      min-width: 70px;
+      text-align: left;
+      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+    }
+    
+    .app-slider {
+      flex: 1;
+      height: 10px;
+      border-radius: 5px;
+      background: 
+        linear-gradient(90deg, 
+          #2A9D8F 0%, 
+          #FCBF49 25%, 
+          #F77F00 50%, 
+          #D62828 75%, 
+          #D62828 100%
+        );
+      outline: none;
+      -webkit-appearance: none;
+      appearance: none;
+      box-shadow: 
+        inset 0 2px 4px rgba(0, 0, 0, 0.1),
+        0 1px 3px rgba(42, 157, 143, 0.2);
+      position: relative;
+    }
+    
+    .app-slider::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      background: 
+        radial-gradient(circle, 
+          #EAE2B7 0%, 
+          #FCBF49 70%, 
+          #F77F00 100%
+        );
+      border: 3px solid #2A9D8F;
+      cursor: pointer;
+      box-shadow: 
+        0 4px 12px rgba(42, 157, 143, 0.3),
+        0 2px 6px rgba(0, 0, 0, 0.2),
+        inset 0 1px 2px rgba(255, 255, 255, 0.3);
+      transition: all 0.2s ease;
+    }
+    
+    .app-slider::-webkit-slider-thumb:hover {
+      transform: scale(1.1);
+      box-shadow: 
+        0 6px 16px rgba(42, 157, 143, 0.4),
+        0 3px 8px rgba(0, 0, 0, 0.3),
+        inset 0 1px 2px rgba(255, 255, 255, 0.4);
+    }
+    
+    .app-slider::-moz-range-thumb {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      background: 
+        radial-gradient(circle, 
+          #EAE2B7 0%, 
+          #FCBF49 70%, 
+          #F77F00 100%
+        );
+      border: 3px solid #2A9D8F;
+      cursor: pointer;
+      box-shadow: 
+        0 4px 12px rgba(42, 157, 143, 0.3),
+        0 2px 6px rgba(0, 0, 0, 0.2);
+    }
+    
+    .slider-value {
+      font-size: 1rem;
+      font-weight: 700;
+      min-width: 28px;
+      text-align: center;
+      color: #2A9D8F;
+      background: 
+        linear-gradient(135deg, 
+          rgba(252, 191, 73, 0.2) 0%, 
+          rgba(234, 226, 183, 0.3) 100%
+        );
+      border-radius: 0.5rem;
+      padding: 0.25rem 0.5rem;
+      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+      box-shadow: 
+        inset 0 1px 2px rgba(252, 191, 73, 0.2),
+        0 1px 3px rgba(42, 157, 143, 0.1);
+    }
+    
+    /* Tablet Styles */
+    @media (min-width: 768px) and (max-width: 1023px) {
+      .app-container {
+        flex-direction: row;
+        height: 100vh;
+      }
+      
+      .app-header {
+        display: none;
+      }
+      
+      .app-canvas-container {
+        flex: 1;
+        padding: 2rem;
+      }
+      
+      .app-controls {
+        width: 320px;
+        height: 100%;
+        border-top: none;
+        border-left: 2px solid rgba(252, 191, 73, 0.3);
+        padding: 2rem;
+        overflow-y: auto;
+      }
+    }
+    
+    /* Desktop Styles */
+    @media (min-width: 1024px) {
+      .app-container {
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 2rem;
+        gap: 2rem;
+      }
+      
+      .app-header {
+        display: none;
+      }
+      
+      .app-canvas-container {
+        flex: none;
+        width: auto;
+        height: auto;
+        border-radius: 1.5rem;
+        box-shadow: 0 0 40px rgba(0, 0, 0, 0.3);
+      }
+      
+      .app-controls {
+        position: relative;
+        flex-direction: row;
+        align-items: center;
+        border-radius: 2rem;
+        padding: 1.5rem 2rem;
+        max-width: 800px;
+        border-top: 2px solid rgba(252, 191, 73, 0.3);
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+      }
+      
+      .button-row {
+        margin-right: 2rem;
+      }
+      
+      .slider-container {
+        flex-direction: row;
+        gap: 2rem;
+      }
+      
+      .slider-item {
+        flex-direction: column;
+        min-width: 120px;
+        text-align: center;
+        gap: 0.5rem;
+      }
+      
+      .slider-label {
+        text-align: center;
+        min-width: auto;
+      }
+    }
+    
+    /* Small Mobile Adjustments */
+    @media (max-width: 480px) {
+      .app-controls {
+        padding: 0.75rem;
+      }
+      
+      .app-button {
+        min-height: 44px;
+        font-size: 0.8125rem;
+      }
+      
+      .slider-item {
+        padding: 0.5rem;
+      }
+    }
+  </style>
+</head>
+    <body class="bg-deep-space text-cream-accent font-orbitron">
+    <div class="app-container">
+      <!-- App Header (Mobile Only) -->
+      <div class="app-header">
+        <h1 class="text-xl font-bold text-deep-blue drop-shadow-lg flex items-center justify-center gap-2">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" class="drop-shadow-md">
+            <rect x="4" y="6" width="16" height="12" rx="2" fill="#EAE2B7" stroke="#003049" stroke-width="1.5"/>
+            <rect x="4" y="6" width="8" height="12" rx="2" fill="#D62828"/>
+            <rect x="12" y="6" width="8" height="12" rx="2" fill="#2A9D8F"/>
+            <text x="8" y="13" fill="#003049" text-anchor="middle" font-family="Orbitron" font-weight="bold" font-size="8">N</text>
+            <text x="16" y="13" fill="#003049" text-anchor="middle" font-family="Orbitron" font-weight="bold" font-size="8">S</text>
+            <circle cx="12" cy="4" r="1" fill="#F77F00"/>
+            <circle cx="8" cy="20" r="1" fill="#F77F00"/>
+            <circle cx="16" cy="20" r="1" fill="#F77F00"/>
+          </svg>
+          Magnetic Field Visualizer
+        </h1>
+        <p class="text-sm text-deep-blue-dark font-medium drop-shadow-md">Drag to explore magnetic forces</p>
+      </div>
+      
+      <!-- Canvas Container -->
+      <div class="app-canvas-container">
+        <canvas 
+          id="viz" 
+          width="500" 
+          height="340"
+          class="bg-deep-space rounded-2xl shadow-2xl border-2 border-teal-light border-opacity-30 magnet-glow ring-2 ring-teal-accent ring-opacity-20"
+        ></canvas>
+      </div>
+      
+      <!-- Controls -->
+      <div class="app-controls">
+        <!-- Action Buttons -->
+        <div class="button-row">
+          <button 
+            id="flipBtn" 
+            class="app-button bg-aurora text-deep-blue hover:bg-golden-teal transition-all duration-300 shadow-lg hover:shadow-xl"
+            title="Flip Magnet Orientation"
+          >
+            <svg width="20" height="20" viewBox="0 0 24 24">
+              <path fill="currentColor" d="M12 2C13.1 2 14 2.9 14 4C14 5.1 13.1 6 12 6C10.9 6 10 5.1 10 4C10 2.9 10.9 2 12 2ZM21 9V7L15 13L21 19V17H23V9H21ZM3 9C1.9 9 1 9.9 1 11V13C1 14.1 1.9 15 3 15C4.1 15 5 14.1 5 13V11C5 9.9 4.1 9 3 9ZM6 11V13H8V11H6ZM12 18C10.9 18 10 18.9 10 20C10 21.1 10.9 22 12 22C13.1 22 14 21.1 14 20C14 18.9 13.1 18 12 18Z"/>
+            </svg>
+            <span class="drop-shadow-sm">FLIP</span>
+          </button>
+          
+          <button 
+            id="distBtn" 
+            class="app-button bg-golden-teal text-deep-blue hover:bg-aurora transition-all duration-300 shadow-lg hover:shadow-xl"
+            title="Adjust Probe Distance"
+          >
+            <svg width="20" height="20" viewBox="0 0 24 24">
+              <path fill="currentColor" d="M21 15L18 12L21 9V11H23V13H21V15ZM3 15V13H1V11H3V9L6 12L3 15ZM12 2C13.1 2 14 2.9 14 4C14 5.1 13.1 6 12 6C10.9 6 10 5.1 10 4C10 2.9 10.9 2 12 2ZM12 18C10.9 18 10 18.9 10 20C10 21.1 10.9 22 12 22C13.1 22 14 21.1 14 20C14 18.9 13.1 18 12 18ZM8 11V13H16V11H8Z"/>
+            </svg>
+            <span class="drop-shadow-sm">PROBE</span>
+          </button>
+        </div>
+        
+        <!-- Sliders -->
+        <div class="slider-container">
+          <!-- North Pole -->
+          <div class="slider-item">
+            <div class="slider-label text-red-accent font-bold drop-shadow-sm">NORTH</div>
+            <input 
+              class="app-slider" 
+              id="northSlider" 
+              type="range" 
+              min="1" 
+              max="5" 
+              value="3" 
+              step="1"
+            >
+            <div class="slider-value" id="northValue">3</div>
+          </div>
+          
+          <!-- South Pole -->
+          <div class="slider-item">
+            <div class="slider-label text-teal-light font-bold drop-shadow-sm">SOUTH</div>
+            <input 
+              class="app-slider" 
+              id="southSlider" 
+              type="range" 
+              min="1" 
+              max="5" 
+              value="3" 
+              step="1"
+            >
+            <div class="slider-value" id="southValue">3</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  <script>
+    // --- Enhanced Magnetic Field Visualizer ---
+
+    // Color palette for magnetic field visualization
+    const COLOR_N = "#D62828";        // North pole red
+    const COLOR_S = "#2A9D8F";        // South pole teal
+    const COLOR_ARROW = "#F77F00";    // Field direction arrows
+    const COLOR_FIELD = "#FCBF49";    // Field lines
+    const COLOR_PROBE = "#EAE2B7";    // Interactive probe
+    const COLOR_BG = "#003049";       // Background
+    const COLOR_MAGNET_BODY = "#EAE2B7"; // Magnet body
+
+    // Canvas setup and rendering context
+    const canvas = document.getElementById('viz');
+    const ctx = canvas.getContext('2d');
+    let W = canvas.width;
+    let H = canvas.height;
+
+    // Enable high-quality rendering
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = 'high';
+
+    function resizeCanvas() {
+      // Detect device type for responsive sizing
+      const isMobile = window.innerWidth < 768;
+      const isTablet = window.innerWidth >= 768 && window.innerWidth < 1024;
+      const isDesktop = window.innerWidth >= 1024;
+      
+      let containerW, containerH;
+      
+      if (isMobile) {
+        const canvasContainer = document.querySelector('.app-canvas-container');
+        if (canvasContainer) {
+          const rect = canvasContainer.getBoundingClientRect();
+          containerW = Math.min(rect.width - 32, 500); // Account for padding
+          containerH = Math.min(rect.height - 32, 400);
+        } else {
+          containerW = Math.min(window.innerWidth * 0.9, 500);
+          containerH = Math.min(window.innerHeight * 0.45, 400);
+        }
+      } else if (isTablet) {
+        containerW = Math.min(window.innerWidth * 0.6, 500);
+        containerH = Math.min(window.innerHeight * 0.8, 400);
+      } else {
+        containerW = Math.min(window.innerWidth * 0.6, 500);
+        containerH = Math.min(window.innerHeight * 0.6, 340);
+      }
+      
+      // Maintain aspect ratio
+      let aspect = 500 / 340;
+      if (containerW / aspect > containerH) {
+        containerW = containerH * aspect;
+      } else {
+        containerH = containerW / aspect;
+      }
+      
+      // Update canvas dimensions
+      canvas.width = W = Math.round(containerW);
+      canvas.height = H = Math.round(containerH);
+      canvas.style.width = W + 'px';
+      canvas.style.height = H + 'px';
+    }
+    resizeCanvas();
+    window.addEventListener('resize', () => {
+      resizeCanvas();
+    });
+
+    // Magnet properties and state
+    let poleN = 3;      // North pole strength (1-5)
+    let poleS = 3;      // South pole strength (1-5)
+    let flipped = false; // Magnet orientation
+
+    function getMagnetGeom() {
+      const cX = W / 2, cY = H / 2;
+      const length = Math.min(W, H) * 0.45; // Magnet length
+      const width = length * 0.28;          // Magnet width
+      return {cX, cY, length, width};
+    }
+
+    function getPolePositions() {
+      const {cX, cY, length} = getMagnetGeom();
+      // Calculate pole positions based on orientation
+      const dx = Math.cos(flipped ? Math.PI : 0) * (length/2 - 1);
+      const dy = Math.sin(flipped ? Math.PI : 0) * (length/2 - 1);
+      return [
+        {x: cX - dx, y: cY - dy}, // North pole
+        {x: cX + dx, y: cY + dy}  // South pole
+      ];
+    }
+
+    // Interactive probe system
+    let probe = { 
+      r: Math.min(W,H)*0.24,    // Distance from center
+      theta: 0,                 // Angle around magnet
+      lastX: 0, lastY: 0,       // Previous position
+      velocity: {x: 0, y: 0}    // Movement velocity
+    };
+
+    const probeDistances = [0.17, 0.24, 0.34, 0.43]; // Available probe distances
+    let probeDistIdx = 1;
+
+    // --- UI CONTROLS WITH ENHANCED FEEDBACK ---
+    function setupButtonHandlers() {
+      console.log('Setting up button handlers...');
+      
+      // Flip button handler
+      const flipBtn = document.getElementById('flipBtn');
+      if (flipBtn) {
+        console.log('Flip button found, setting up handler');
+        const handleFlip = (e) => {
+          console.log('Flip button activated!');
+          flipped = !flipped;
+          draw();
+          e.preventDefault();
+          e.stopPropagation();
+        };
+        
+        flipBtn.addEventListener('click', handleFlip);
+        flipBtn.addEventListener('touchstart', handleFlip);
+      } else {
+        console.log('Flip button NOT found!');
+      }
+
+      // Distance button handler  
+      const distBtn = document.getElementById('distBtn');
+      if (distBtn) {
+        console.log('Distance button found, setting up handler');
+        const handleDistance = (e) => {
+          console.log('Distance button activated!');
+          probeDistIdx = (probeDistIdx + 1) % probeDistances.length;
+          probe.r = Math.min(W, H) * probeDistances[probeDistIdx];
+          draw();
+          e.preventDefault();
+          e.stopPropagation();
+        };
+        
+        distBtn.addEventListener('click', handleDistance);
+        distBtn.addEventListener('touchstart', handleDistance);
+      } else {
+        console.log('Distance button NOT found!');
+      }
+    }
+
+    function setupSliderHandlers() {
+      const northSlider = document.getElementById('northSlider');
+      const southSlider = document.getElementById('southSlider');
+      
+      if (northSlider) {
+        northSlider.addEventListener('input', e => {
+          poleN = Number(e.target.value);
+          const valueDisplay = document.getElementById('northValue');
+          if (valueDisplay) {
+            valueDisplay.textContent = poleN;
+          }
+          draw();
+        });
+      }
+
+      if (southSlider) {
+        southSlider.addEventListener('input', e => {
+          poleS = Number(e.target.value);
+          const valueDisplay = document.getElementById('southValue');
+          if (valueDisplay) {
+            valueDisplay.textContent = poleS;
+          }
+          draw();
+        });
+      }
+    }
+
+    // --- ENHANCED INTERACTION SYSTEM ---
+    let dragging = false;
+    let lastInteractionTime = 0;
+
+    function getCanvasXY(e) {
+      const rect = canvas.getBoundingClientRect();
+      let clientX, clientY;
+      
+      // Handle different event types
+      if (e.touches && e.touches.length > 0) {
+        // Touch events
+        clientX = e.touches[0].clientX;
+        clientY = e.touches[0].clientY;
+      } else if (e.changedTouches && e.changedTouches.length > 0) {
+        // Touch end events
+        clientX = e.changedTouches[0].clientX;
+        clientY = e.changedTouches[0].clientY;
+      } else {
+        // Mouse and pointer events
+        clientX = e.clientX;
+        clientY = e.clientY;
+      }
+      
+      return {
+        x: (clientX - rect.left) * (canvas.width / rect.width),
+        y: (clientY - rect.top) * (canvas.height / rect.height)
+      };
+    }
+
+    function handleDown(e) {
+      // Don't interfere with button clicks
+      if (e.target !== canvas) return;
+      
+      dragging = true;
+      touchProbeActive = true;
+      interactionBoost = 1.5; // Boost field line intensity when touching
+      
+      const {x, y} = getCanvasXY(e);
+      touchProbePosition.x = x;
+      touchProbePosition.y = y;
+      
+      handleMove(e);
+      e.preventDefault();
+    }
+
+    function handleUp(e) {
+      dragging = false;
+      
+      // Gradually fade out interactive elements
+      setTimeout(() => {
+        touchProbeActive = false;
+        interactionBoost = 1.0;
+      }, 500); // Half second delay for smoother transition
+      
+      if (e.target === canvas) {
+        e.preventDefault();
+      }
+    }
+
+    function handleMove(e) {
+      const {x, y} = getCanvasXY(e);
+      
+      // Always update touch probe position for interactive field lines
+      if (dragging || e.type === "mousemove") {
+        touchProbePosition.x = x;
+        touchProbePosition.y = y;
+        
+        if (dragging) {
+          touchProbeActive = true;
+          interactionBoost = 1.8; // Extra boost when actively dragging
+        }
+      }
+      
+      // Only update probe if we're dragging or mouse is over canvas
+      if (!dragging && e.type !== "mousemove" && e.type !== "touchmove") return;
+      if (e.target !== canvas && e.type !== "mousemove" && e.type !== "touchmove") return;
+      
+      const {cX, cY} = getMagnetGeom();
+      const dx = x - cX, dy = y - cY;
+      
+      // Calculate velocity for enhanced animations
+      const currentTime = Date.now();
+      const deltaTime = currentTime - lastInteractionTime;
+      if (deltaTime > 0) {
+        probe.velocity.x = (x - probe.lastX) / deltaTime * 1000;
+        probe.velocity.y = (y - probe.lastY) / deltaTime * 1000;
+      }
+      
+      probe.lastX = x;
+      probe.lastY = y;
+      lastInteractionTime = currentTime;
+      
+      probe.theta = Math.atan2(dy, dx);
+      probe.r = Math.max(0.08 * Math.min(W,H), Math.min(Math.hypot(dx, dy), 0.45 * Math.min(W,H)));
+      
+      // Trigger haptic feedback on supported devices
+      if (navigator.vibrate && dragging) {
+        navigator.vibrate(10);
+      }
+      
+      draw();
+      if (e.target === canvas) {
+        e.preventDefault();
+      }
+    }
+
+    // Enhanced event handling for better touch responsiveness
+    canvas.addEventListener('mousedown', handleDown, {passive: false});
+    canvas.addEventListener('touchstart', handleDown, {passive: false});
+    canvas.addEventListener('mousemove', handleMove, {passive: false});
+    canvas.addEventListener('touchmove', handleMove, {passive: false});
+    
+    // Also listen for pointer events for better cross-device compatibility
+    if (window.PointerEvent) {
+      canvas.addEventListener('pointerdown', handleDown, {passive: false});
+      canvas.addEventListener('pointermove', handleMove, {passive: false});
+      document.addEventListener('pointerup', handleUp, {passive: false});
+    }
+    
+    document.addEventListener('mouseup', handleUp, {passive: false});
+    document.addEventListener('touchend', handleUp, {passive: false});
+    document.addEventListener('touchcancel', handleUp, {passive: false});
+
+    // Magnetic field physics calculation
+    function fieldAt(x, y, pN, pS, mN, mS) {
+      const k = 180; // Scaling factor for visualization
+      
+      // Distance vectors from point to each pole
+      let dxN = x - pN.x, dyN = y - pN.y;
+      let dxS = x - pS.x, dyS = y - pS.y;
+      
+      // Distance squared with smoothing factor to avoid singularities
+      let rN2 = dxN*dxN + dyN*dyN + 15;
+      let rS2 = dxS*dxS + dyS*dyS + 15;
+      let rN = Math.sqrt(rN2);
+      let rS = Math.sqrt(rS2);
+      
+      // Calculate field contributions using inverse cube law
+      let fx = k * mN * dxN / (rN2 * rN);
+      let fy = k * mN * dyN / (rN2 * rN);
+      fx -= k * mS * dxS / (rS2 * rS);  // Opposite polarity
+      fy -= k * mS * dyS / (rS2 * rS);
+      
+      return {x: fx, y: fy, magnitude: Math.hypot(fx, fy)};
+    }
+
+    // --- ENHANCED MAGNET RENDERING ---
+    function drawMagnet() {
+      const {cX, cY, length, width} = getMagnetGeom();
+      ctx.save();
+      ctx.translate(cX, cY);
+      ctx.rotate(flipped ? Math.PI : 0);
+
+      // Enhanced shadow and glow effects
+      ctx.shadowColor = COLOR_N;
+      ctx.shadowBlur = 15;
+      ctx.shadowOffsetX = 0;
+      ctx.shadowOffsetY = 0;
+
+      // Outer body with enhanced styling
+      ctx.beginPath();
+      ctx.roundRect(-length/2, -width/2, length, width, width*0.17);
+      ctx.fillStyle = COLOR_MAGNET_BODY + "dd";
+      ctx.strokeStyle = COLOR_BG;
+      ctx.lineWidth = width*0.09;
+      ctx.fill();
+      ctx.stroke();
+
+      // Enhanced North pole with pulsing effect
+      ctx.shadowColor = COLOR_N;
+      ctx.shadowBlur = 20;
+      ctx.beginPath();
+      ctx.roundRect(-length/2, -width/2, length/2, width, width*0.16);
+      ctx.fillStyle = COLOR_N;
+      ctx.globalAlpha = Math.max(0.6, poleN/5 * (0.8 + 0.2 * Math.sin(tAnim * 3)));
+      ctx.fill();
+      ctx.globalAlpha = 1.0;
+
+      // Enhanced South pole with pulsing effect
+      ctx.shadowColor = COLOR_S;
+      ctx.shadowBlur = 20;
+      ctx.beginPath();
+      ctx.roundRect(0, -width/2, length/2, width, width*0.16);
+      ctx.fillStyle = COLOR_S;
+      ctx.globalAlpha = Math.max(0.6, poleS/5 * (0.8 + 0.2 * Math.sin(tAnim * 3 + Math.PI)));
+      ctx.fill();
+      ctx.globalAlpha = 1.0;
+
+      // Enhanced labels with glow
+      ctx.shadowColor = COLOR_BG;
+      ctx.shadowBlur = 10;
+      ctx.fillStyle = COLOR_BG;
+      ctx.font = `bold ${width*0.7}px Orbitron`;
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillText("N", -length/3.2, 0);
+      ctx.fillText("S", length/3.2, 0);
+
+      ctx.restore();
+    }
+
+    // Field line animation and interaction system
+    let tAnim = 0;
+    let fieldLineIntensity = 1.0;
+    let interactionBoost = 1.0;       // Boost intensity during touch
+    let touchProbeActive = false;     // Touch interaction state
+    let touchProbePosition = {x: 0, y: 0}; // Touch position
+
+    function drawFieldLines() {
+      const {cX, cY} = getMagnetGeom();
+      const [pN, pS] = getPolePositions();
+      const baseLines = 16;
+      let spread = Math.PI*0.95; // Field line spread angle
+      
+      // Calculate field line intensity based on pole strength and interaction
+      fieldLineIntensity = Math.max(0.8, (poleN + poleS) / 8) * interactionBoost;
+      
+      // Draw field lines emanating from North pole
+      for (let i=0; i<baseLines; ++i) {
+        let phi = Math.PI/2 - spread/2 + spread*i/(baseLines-1);
+        let r0 = getMagnetGeom().width*0.46;
+        let x0 = pN.x + r0 * Math.cos(phi);
+        let y0 = pN.y + r0 * Math.sin(phi);
+        drawFieldLine(x0, y0, pN, pS, poleN, poleS, tAnim, true, i, false);
+      }
+      
+      // Draw field lines emanating from South pole
+      for (let i=0; i<baseLines; ++i) {
+        let phi = Math.PI/2 - spread/2 + spread*i/(baseLines-1);
+        let r0 = getMagnetGeom().width*0.46;
+        let x0 = pS.x - r0 * Math.cos(phi);
+        let y0 = pS.y - r0 * Math.sin(phi);
+        drawFieldLine(x0, y0, pN, pS, poleN, poleS, tAnim, false, i, false);
+      }
+      
+      // Draw additional interactive field lines when touching
+      if (touchProbeActive) {
+        drawInteractiveFieldLines();
+      }
+    }
+    
+    function drawInteractiveFieldLines() {
+      const [pN, pS] = getPolePositions();
+      const touchRadius = Math.min(W, H) * 0.12;
+      
+      // Draw radial field lines around touch point
+      for (let i = 0; i < 12; i++) {
+        const angle = (i / 12) * 2 * Math.PI;
+        const x0 = touchProbePosition.x + Math.cos(angle) * touchRadius;
+        const y0 = touchProbePosition.y + Math.sin(angle) * touchRadius;
+        
+        if (x0 > 0 && x0 < W && y0 > 0 && y0 < H) {
+          drawFieldLine(x0, y0, pN, pS, poleN, poleS, tAnim, true, i, true);
+        }
+      }
+      
+      // Add denser field lines closer to touch point
+      const numExtraLines = 8;
+      for (let i = 0; i < numExtraLines; i++) {
+        const offsetAngle = (i / numExtraLines) * 2 * Math.PI;
+        const offset = touchRadius * 0.6;
+        const x0 = touchProbePosition.x + Math.cos(offsetAngle) * offset;
+        const y0 = touchProbePosition.y + Math.sin(offsetAngle) * offset;
+        
+        if (x0 > 0 && x0 < W && y0 > 0 && y0 < H) {
+          drawFieldLine(x0, y0, pN, pS, poleN, poleS, tAnim, Math.random() > 0.5, i, true);
+        }
+      }
+    }
+
+    function drawFieldLine(x0, y0, pN, pS, mN, mS, tAnim, forward=true, lineIndex=0, isInteractive=false) {
+      let points = [];
+      let steps = isInteractive ? 200 : 160;
+      let ds = isInteractive ? 2.5 : 3.8;
+      let x = x0, y = y0;
+      
+      for (let i=0; i<steps; ++i) {
+        points.push({x, y});
+        let B = fieldAt(x, y, pN, pS, mN, mS);
+        let norm = Math.hypot(B.x, B.y);
+        if (norm < 0.0001) break;
+        let dx = (B.x / norm) * ds;
+        let dy = (B.y / norm) * ds;
+        if (!forward) { dx = -dx; dy = -dy; }
+        x += dx;
+        y += dy;
+        if (Math.hypot(x - (W/2), y - (H/2)) > Math.min(W,H)*0.48) break;
+      }
+      
+      // Much higher contrast and better visibility
+      ctx.save();
+      
+      if (isInteractive) {
+        // Interactive field lines with high contrast and glow
+        const pulseIntensity = 0.7 + 0.3 * Math.sin(tAnim * 4 + lineIndex * 0.5);
+        ctx.globalAlpha = pulseIntensity * fieldLineIntensity;
+        ctx.strokeStyle = forward ? "#00F5FF" : "#FF6B35"; // Bright cyan and orange
+        ctx.lineWidth = 4 + Math.sin(tAnim * 2 + lineIndex) * 1;
+        ctx.shadowColor = forward ? "#00F5FF" : "#FF6B35";
+        ctx.shadowBlur = 15;
+        ctx.setLineDash([]);
+      } else {
+        // Base field lines with much higher contrast
+        const baseAlpha = forward ? 0.85 : 0.65;
+        const waveOffset = Math.sin((tAnim * 1.5) + (lineIndex * 0.4)) * 0.15;
+        ctx.globalAlpha = Math.min(1.0, (baseAlpha + waveOffset) * fieldLineIntensity);
+        
+        // Use high contrast colors
+        if (forward) {
+          ctx.strokeStyle = "#FCBF49"; // Bright yellow
+          ctx.shadowColor = "#F77F00";
+        } else {
+          ctx.strokeStyle = "#2A9D8F"; // Bright teal  
+          ctx.shadowColor = "#46B5A7";
+        }
+        
+        ctx.lineWidth = forward ? (3 + Math.sin(tAnim + lineIndex) * 0.8) : 2.5;
+        ctx.shadowBlur = 8;
+        ctx.setLineDash([28, 18]);
+      }
+      
+      ctx.lineDashOffset = -tAnim*35 * (forward ? 1 : -1);
+      
+      // Draw the field line with glow effect
+      ctx.beginPath();
+      for (let i=0; i<points.length; ++i) {
+        if (!i) ctx.moveTo(points[i].x, points[i].y);
+        else ctx.lineTo(points[i].x, points[i].y);
+      }
+      ctx.stroke();
+      
+      // Add inner glow for better visibility
+      if (!isInteractive) {
+        ctx.globalAlpha *= 0.6;
+        ctx.lineWidth *= 0.4;
+        ctx.shadowBlur = 2;
+        ctx.stroke();
+      }
+      
+      ctx.setLineDash([]);
+      ctx.restore();
+    }
+
+    // Draw field direction arrows on a grid
+    function drawFieldArrows() {
+      const {cX, cY} = getMagnetGeom();
+      const [pN, pS] = getPolePositions();
+      const baseSpacing = Math.min(W, H) / 8;
+      const spacing = touchProbeActive ? baseSpacing * 0.75 : baseSpacing; // Denser during touch
+      
+      // Draw arrows in a grid pattern
+      for (let y=spacing*1.2; y<H-spacing*1.2; y+=spacing) {
+        for (let x=spacing*1.2; x<W-spacing*1.2; x+=spacing) {
+          const geom = getMagnetGeom();
+          // Skip arrows inside the magnet body
+          if (Math.abs(x-cX) < geom.length/2.1 && Math.abs(y-cY) < geom.width/1.4) continue;
+          
+          const B = fieldAt(x, y, pN, pS, poleN, poleS);
+          const intensity = Math.min(B.magnitude / 80, 1);
+          
+          // Scale arrow size based on field strength
+          const baseSize = 14 + intensity * 12;
+          const size = touchProbeActive ? baseSize * 1.2 : baseSize;
+          
+          // Scale transparency based on field strength
+          const baseAlpha = 0.8 + intensity * 0.2;
+          const alpha = touchProbeActive ? Math.min(1.0, baseAlpha * 1.3) : baseAlpha;
+          
+          // Change color near touch point
+          let arrowColor = COLOR_ARROW;
+          if (touchProbeActive) {
+            const distToTouch = Math.hypot(x - touchProbePosition.x, y - touchProbePosition.y);
+            const touchRadius = Math.min(W, H) * 0.15;
+            if (distToTouch < touchRadius) {
+              arrowColor = intensity > 0.5 ? "#00F5FF" : "#FF6B35";
+            }
+          }
+          
+          const lineWidth = 1.2 + intensity * 0.8;
+          drawArrow(x, y, B.x, B.y, size, lineWidth, arrowColor, alpha);
+        }
+      }
+      
+      // Draw additional arrows around touch point
+      if (touchProbeActive) {
+        drawInteractiveArrows();
+      }
+    }
+    
+    function drawInteractiveArrows() {
+      const [pN, pS] = getPolePositions();
+      const touchRadius = Math.min(W, H) * 0.08;
+      const numArrows = 16;
+      
+      for (let i = 0; i < numArrows; i++) {
+        const angle = (i / numArrows) * 2 * Math.PI;
+        const x = touchProbePosition.x + Math.cos(angle) * touchRadius;
+        const y = touchProbePosition.y + Math.sin(angle) * touchRadius;
+        
+        if (x > 20 && x < W-20 && y > 20 && y < H-20) {
+          const B = fieldAt(x, y, pN, pS, poleN, poleS);
+          const intensity = Math.min(B.magnitude / 60, 1);
+          const size = 18 + intensity * 8;
+          const alpha = 0.9;
+          const color = intensity > 0.6 ? "#00F5FF" : "#FCBF49";
+          
+          drawArrow(x, y, B.x, B.y, size, 2, color, alpha);
+        }
+      }
+    }
+
+    // --- ENHANCED PROBE WITH GLOW AND TRAIL EFFECTS ---
+    function drawProbe() {
+      const {cX, cY} = getMagnetGeom();
+      let px = cX + probe.r * Math.cos(probe.theta);
+      let py = cY + probe.r * Math.sin(probe.theta);
+      
+      // Enhanced probe with pulsing glow
+      ctx.save();
+      ctx.shadowColor = COLOR_FIELD;
+      ctx.shadowBlur = 20 + 10 * Math.sin(tAnim * 4);
+      ctx.beginPath();
+      ctx.arc(px, py, 16, 0, 2*Math.PI);
+      ctx.fillStyle = COLOR_PROBE;
+      ctx.globalAlpha = 0.95;
+      ctx.fill();
+
+      // Inner glow
+      ctx.beginPath();
+      ctx.arc(px, py, 8, 0, 2*Math.PI);
+      ctx.fillStyle = COLOR_FIELD;
+      ctx.globalAlpha = 0.6 + 0.4 * Math.sin(tAnim * 5);
+      ctx.fill();
+
+      // Enhanced field vector at probe with dynamic sizing
+      const [pN, pS] = getPolePositions();
+      const B = fieldAt(px, py, pN, pS, poleN, poleS);
+      const vectorSize = 30 + B.magnitude * 0.3;
+      const vectorWidth = 1.8 + B.magnitude * 0.02;
+      
+      drawArrow(px, py, B.x, B.y, vectorSize, vectorWidth, COLOR_FIELD, 1.0);
+
+      ctx.restore();
+    }
+
+    // --- ENHANCED ARROW DRAWING ---
+    function drawArrow(x, y, vx, vy, size, width, color, alpha=1.0) {
+      ctx.save();
+      ctx.globalAlpha = alpha;
+      let norm = Math.hypot(vx, vy) || 1;
+      let len = size;
+      let ux = vx/norm, uy = vy/norm;
+      let tipX = x + ux*len, tipY = y + uy*len;
+      
+      // Enhanced arrow with glow
+      ctx.shadowColor = color;
+      ctx.shadowBlur = 8;
+      ctx.strokeStyle = color;
+      ctx.lineWidth = width;
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+      
+      // Main line
+      ctx.beginPath();
+      ctx.moveTo(x, y);
+      ctx.lineTo(tipX, tipY);
+      ctx.stroke();
+      
+      // Enhanced arrowhead
+      ctx.beginPath();
+      let angle = Math.atan2(uy, ux);
+      let ah = len*0.5;
+      ctx.moveTo(tipX, tipY);
+      ctx.lineTo(
+        tipX - ah*Math.cos(angle-Math.PI/6),
+        tipY - ah*Math.sin(angle-Math.PI/6)
+      );
+      ctx.moveTo(tipX, tipY);
+      ctx.lineTo(
+        tipX - ah*Math.cos(angle+Math.PI/6),
+        tipY - ah*Math.sin(angle+Math.PI/6)
+      );
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    // Animation loop and rendering
+    let fps = 60;
+    let lastFrameTime = 0;
+
+    function draw() {
+      ctx.clearRect(0, 0, W, H); // Clear previous frame
+      
+      // Render all visualization elements in order
+      drawFieldLines();
+      drawFieldArrows();
+      drawMagnet();
+      drawProbe();
+    }
+
+    function animate(currentTime) {
+      const deltaTime = currentTime - lastFrameTime;
+      if (deltaTime >= 1000 / fps) {
+        tAnim += 0.04; // Animation time step
+        draw();
+        lastFrameTime = currentTime;
+      }
+      requestAnimationFrame(animate);
+    }
+    
+    requestAnimationFrame(animate); // Start animation loop
+
+    // Utility functions
+    function updateProbeDist() {
+      probe.r = Math.min(W, H) * probeDistances[probeDistIdx];
+    }
+    
+    function handleResize() {
+      resizeCanvas();
+      updateProbeDist();
+      draw();
+    }
+    
+    updateProbeDist();
+    window.addEventListener('resize', handleResize);
+    
+    // Handle mobile orientation changes
+    window.addEventListener('orientationchange', () => {
+      setTimeout(handleResize, 100); // Delay for orientation transition
+    });
+
+
+
+    // --- SLIDER INTERACTIONS ---
+    document.querySelectorAll('.app-slider').forEach(slider=>{
+      slider.addEventListener('touchstart', ()=>{
+        if (navigator.vibrate) {
+          navigator.vibrate(5);
+        }
+      });
+      
+      slider.addEventListener('input', ()=>{
+        if (navigator.vibrate) {
+          navigator.vibrate(3);
+        }
+      });
+    });
+
+    // --- PREVENT SCROLLING ---
+    document.body.addEventListener('touchmove', function(e) {
+      if (e.target === canvas) e.preventDefault();
+    }, {passive:false});
+
+    // Application initialization
+    function initializeApp() {
+      console.log('Initializing app...');
+      
+      // Setup all UI event handlers
+      setupButtonHandlers();
+      setupSliderHandlers();
+      
+      // Ensure DOM layout is ready before rendering
+      setTimeout(() => {
+        console.log('Canvas setup starting...');
+        resizeCanvas();
+        updateProbeDist();
+        draw();
+        console.log('App initialization complete!');
+      }, 100);
+    }
+
+    // Initialize when DOM is ready
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', initializeApp);
+    } else {
+      initializeApp(); // DOM already ready
+    }
+
+    // Track interaction state for hints
+    let interactionHintShown = false;
+    canvas.addEventListener('touchstart', () => {
+      if (!interactionHintShown) {
+        interactionHintShown = true;
+        // Could show user guidance here
+      }
+    }, {passive: false});
+  </script>
+</body>
+</html> 
