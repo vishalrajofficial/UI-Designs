@@ -1,6 +1,6 @@
 # UI Design Collection
 
-A comprehensive collection of 8 interactive React components and web applications showcasing modern UI/UX design patterns, engaging user experiences, and cutting-edge web technologies.
+A comprehensive collection of 9 interactive React components and web applications showcasing modern UI/UX design patterns, engaging user experiences, and cutting-edge web technologies.
 
 ## 🚀 Components Overview
 
@@ -149,6 +149,25 @@ An interactive logic puzzle game where players connect circuits by rotating tile
 
 ---
 
+### ⌨️ Word Cascade Typing Game
+**Location**: `wordTypingGame.html`
+
+A retro-style arcade typing game where players type falling words before they reach the bottom.
+
+**Features**:
+- 🎮 Arcade-style falling word gameplay
+- 🌈 Retro cyberpunk visual design with neon effects
+- ⏱️ Real-time score and accuracy tracking
+- 🎯 Multiple difficulty levels with speed progression
+- 🔤 Dynamic word generation and validation
+- 🎨 Split-screen layout design with sidebar statistics  
+- ⚡ Responsive animations and visual feedback
+- 🏆 Performance metrics and game statistics
+
+**Key Technologies**: HTML5, Tailwind CSS, JavaScript, CSS animations, Google Fonts
+
+---
+
 ## 🎨 Design Philosophy
 
 These components demonstrate:
@@ -223,6 +242,7 @@ function App() {
 - `productList.html` - Product catalog with shopping cart
 - `plantSimulation-tailwind.html` - Plant care game (Tailwind version)
 - `plantSimulation.html` - Plant care game (standard version)
+- `wordTypingGame.html` - Word Cascade retro typing arcade game
 
 ## 🎮 Interactive Features
 
@@ -234,6 +254,7 @@ function App() {
 - **Time Management**: Visual schedule planning with drag-and-drop
 - **Plant Care**: Gardening simulation with growth mechanics
 - **Circuit Puzzle**: Logic-based tile rotation puzzle game
+- **Word Cascade**: Retro arcade typing game with falling words
 
 ## 📄 License
 
