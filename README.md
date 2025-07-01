@@ -1,6 +1,6 @@
 # UI Design Collection
 
-A comprehensive collection of 10 interactive React components and web applications showcasing modern UI/UX design patterns, engaging user experiences, and cutting-edge web technologies.
+A comprehensive collection of 12 interactive React components and web applications showcasing modern UI/UX design patterns, engaging user experiences, and cutting-edge web technologies.
 
 ## 🚀 Components Overview
 
@@ -187,6 +187,44 @@ An interactive physics simulation that visualizes magnetic field lines and force
 
 ---
 
+### 🎬 StoryFlow Pro
+**Location**: `storyFlow/storyFlow.tsx`
+
+A professional timeline-based storyboard editor for filmmakers, animators, and creative professionals.
+
+**Features**:
+- 🎞️ Timeline-based visual story creation with drag-and-drop interface
+- 🎨 Multiple transition types (cut, fade, dissolve, wipe) with visual indicators
+- 📐 Precise frame-by-frame scene positioning and timing
+- 🎯 Professional landing page with feature showcase
+- 🔧 Advanced zoom and track height controls
+- 📱 Fully responsive design with touch-friendly interactions
+- ⚡ Real-time preview and seamless scene manipulation
+- 🎮 Export functionality for professional workflows
+
+**Key Technologies**: React, TypeScript, advanced drag-and-drop, timeline algorithms
+
+---
+
+### 🤝 Hybrid Meetups
+**Location**: `hybridMeetups/hybridMeetups.tsx`
+
+A comprehensive event management platform for hybrid (in-person + virtual) meetups and conferences.
+
+**Features**:
+- 🌐 Hybrid event creation with dual attendance tracking
+- 📅 Advanced calendar integration with time selection
+- 👥 Real-time attendee management (in-person, virtual, waitlist)
+- 🛡️ Safety rating system and equipment tracking
+- 💬 Live comments and feedback system with sentiment analysis
+- 📹 Integrated video calling functionality
+- 🎯 Advanced filtering and search capabilities
+- 📊 Comprehensive event analytics and reporting
+
+**Key Technologies**: React, TypeScript, complex state management, video integration
+
+---
+
 ## 🎨 Design Philosophy
 
 These components demonstrate:
@@ -200,17 +238,21 @@ These components demonstrate:
 - **Game Mechanics**: Interactive elements that encourage exploration and learning
 - **Cross-platform**: Compatible across different browsers and devices
 - **Educational Value**: Learning-focused components with gamification elements
-- **Real-world Applications**: Practical UI patterns for e-commerce, productivity, and entertainment
+- **Real-world Applications**: Practical UI patterns for e-commerce, productivity, entertainment, and professional workflows
+- **Enterprise-grade**: Scalable architectures suitable for production applications
+- **Advanced Interactions**: Complex drag-and-drop, timeline editing, and real-time collaboration features
 
 ## 🛠️ Technologies Used
 
 - **Frontend**: React, TypeScript, HTML5, CSS3
 - **Animation Libraries**: Framer Motion, custom CSS animations
 - **Styling**: Tailwind CSS, custom design systems
-- **Graphics**: SVG animations, Canvas (where applicable)
-- **State Management**: React Hooks, localStorage, context API
-- **Algorithms**: Pathfinding, validation logic, game mechanics
-- **Typography**: Google Fonts (Poppins, Comfortaa, Manrope)
+- **Graphics**: SVG animations, HTML5 Canvas, advanced visualizations
+- **State Management**: React Hooks, localStorage, context API, complex state patterns
+- **Algorithms**: Pathfinding, validation logic, game mechanics, timeline calculations
+- **Media Integration**: Video calling, real-time communication APIs
+- **Typography**: Google Fonts (Poppins, Comfortaa, Manrope, Orbitron, Roboto Slab)
+- **Advanced Features**: Drag-and-drop systems, sentiment analysis, physics simulations
 - **Build Tools**: Modern ES6+ features, responsive design patterns
 
 ## 📱 Browser Support
@@ -240,6 +282,8 @@ import Dashboard from './FinancePortfolio/Dashboard';
 import PetSimulation from './PetSimulation/petSimulation';
 import TimeWheel from './TimeWheel/TimeWheel';
 import CircuitPuzzle from './Puzzle/puzzle';
+import StoryFlow from './storyFlow/storyFlow';
+import HybridMeetups from './hybridMeetups/hybridMeetups';
 // ... other imports
 
 function App() {
@@ -251,6 +295,8 @@ function App() {
       <PetSimulation />
       <TimeWheel />
       <CircuitPuzzle />
+      <StoryFlow />
+      <HybridMeetups />
       {/* ... other components */}
     </div>
   );
@@ -276,6 +322,8 @@ function App() {
 - **Circuit Puzzle**: Logic-based tile rotation puzzle game
 - **Word Cascade**: Retro arcade typing game with falling words
 - **Magnetic Field**: Interactive physics simulation with field visualization
+- **StoryFlow Pro**: Professional storyboard editor with timeline controls
+- **Hybrid Meetups**: Event management platform with video integration
 
 ## 📄 License
 
