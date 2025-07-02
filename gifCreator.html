@@ -1,0 +1,2610 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta
+			name="viewport"
+			content="width=device-width, initial-scale=1.0"
+		/>
+		<title>GifyCapt - Capture Your Screen as GIFs</title>
+		<script src="https://cdn.tailwindcss.com"></script>
+		<link
+			rel="stylesheet"
+			href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+		/>
+		<link
+			href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
+			rel="stylesheet"
+		/>
+		<script>
+			tailwind.config = {
+				theme: {
+					extend: {
+						fontFamily: { sans: ["Poppins"] },
+						colors: {
+							vibrantGreen: "#3AB795",
+							lightGreen: "#A0E8AF",
+							sageGreen: "#86BAA1",
+							creamBeige: "#EDEAD0",
+							vibrantYellow: "#FFCF56",
+							modernCard: "rgba(58,183,149,0.15)",
+							modernGlass: "rgba(237,234,208,0.15)",
+						},
+						boxShadow: {
+							modern: "0 8px 40px 0 rgba(58,183,149,0.2), 0 2px 8px 0 rgba(0,0,0,0.05)",
+						},
+						animation: {
+							float: "float 6s ease-in-out infinite",
+							gradient: "gradient 8s linear infinite",
+							"pulse-slow": "pulse 3s ease-in-out infinite",
+							"fade-in": "fadeIn 0.6s ease-out",
+							"slide-up": "slideUp 0.4s ease-out",
+							"bounce-subtle": "bounceSubtle 2s ease-in-out infinite",
+						},
+						keyframes: {
+							"gradient-x": {
+								"0%, 100%": {
+									"background-position": "left center",
+								},
+								"50%": {
+									"background-position": "right center",
+								},
+							},
+							float: {
+								"0%, 100%": { transform: "translateY(0px)" },
+								"50%": { transform: "translateY(-10px)" },
+							},
+							gradient: {
+								"0%, 100%": { backgroundPosition: "0% 50%" },
+								"50%": { backgroundPosition: "100% 50%" },
+							},
+							fadeIn: {
+								"0%": { opacity: "0", transform: "translateY(20px)" },
+								"100%": { opacity: "1", transform: "translateY(0)" },
+							},
+							slideUp: {
+								"0%": { opacity: "0", transform: "translateY(40px)" },
+								"100%": { opacity: "1", transform: "translateY(0)" },
+							},
+							bounceSubtle: {
+								"0%, 100%": { transform: "translateY(0)" },
+								"50%": { transform: "translateY(-5px)" },
+							},
+						},
+					},
+				},
+			};
+		</script>
+		<style>
+			body {
+				font-family: 'Poppins';
+				background: linear-gradient(
+					135deg,
+					#3AB795 0%,
+					#86BAA1 25%,
+					#A0E8AF 50%,
+					#FFCF56 75%,
+					#3AB795 100%
+				);
+				background-size: 400% 400%;
+				animation: gradient 15s ease infinite;
+				min-height: 100vh;
+			}
+			.glass-effect {
+				background: rgba(237, 234, 208, 0.15) !important;
+				backdrop-filter: blur(20px);
+				border-radius: 1.5rem;
+				border: 1.5px solid rgba(58, 183, 149, 0.4);
+				box-shadow: 0 8px 40px 0 rgba(58, 183, 149, 0.3), 0 2px 8px 0 rgba(0, 0, 0, 0.07);
+			}
+
+			.glass-button {
+				background: rgba(237, 234, 208, 0.2);
+				backdrop-filter: blur(10px);
+				border: 1px solid rgba(160, 232, 175, 0.4);
+				transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+			}
+
+			.glass-button:hover {
+				background: rgba(160, 232, 175, 0.3);
+				transform: translateY(-2px);
+				box-shadow: 0 10px 25px rgba(58, 183, 149, 0.3);
+			}
+
+			.modern-navbar {
+				background: linear-gradient(90deg, #0f172a, #1e293b, #0f172a);
+				backdrop-filter: blur(20px);
+				border-bottom: 1px solid rgba(148, 163, 184, 0.3);
+				box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+			}
+			.modern-card {
+				background: rgba(134, 186, 161, 0.25);
+				border: 1.5px solid rgba(58, 183, 149, 0.4);
+				border-radius: 1.2rem;
+				box-shadow: 0 6px 26px 0 rgba(58, 183, 149, 0.2);
+				backdrop-filter: blur(10px);
+			}
+
+
+			#timelineMarker {
+				transition: transform 0.1s ease, background-color 0.1s ease;
+				cursor: grab;
+			}
+
+			#timelineMarker:active {
+				cursor: grabbing;
+			}
+
+			#timeline {
+				cursor: pointer;
+			}
+
+			#timeline:active {
+				cursor: grabbing;
+			}
+
+			.progress-container {
+				background: rgba(134, 186, 161, 0.3);
+				border-radius: 50px;
+				padding: 4px;
+				border: 1px solid rgba(58, 183, 149, 0.4);
+				box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
+			}
+
+			.progress-bar {
+				background: linear-gradient(90deg, #FFCF56 0%, #3AB795 100%);
+				border-radius: 50px;
+				transition: width 0.3s ease;
+			}
+
+			/* Keyboard shortcut hints */
+			.keyboard-hint {
+				position: fixed;
+				bottom: 20px;
+				right: 80px;
+				background: linear-gradient(135deg, rgba(0, 0, 0, 0.9) 0%, rgba(30, 41, 59, 0.95) 100%);
+				backdrop-filter: blur(10px);
+				color: white;
+				padding: 16px 18px;
+				border-radius: 12px;
+				border: 1px solid rgba(148, 163, 184, 0.3);
+				font-size: 12px;
+				z-index: 1000;
+				opacity: 0.8;
+				transition: all 0.3s ease;
+				box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+			}
+
+			.keyboard-hint:hover {
+				opacity: 1;
+				transform: translateY(-2px) scale(1.02);
+				box-shadow: 0 12px 35px rgba(0, 0, 0, 0.4);
+			}
+
+			/* Hide keyboard hint on mobile devices */
+			@media (max-width: 768px) {
+				.keyboard-hint {
+					display: none !important;
+				}
+			}
+
+			/* Also hide on touch devices */
+			@media (pointer: coarse) {
+				.keyboard-hint {
+					display: none !important;
+				}
+			}
+
+			/* Hide on devices with small screens regardless of pointer type */
+			@media (max-height: 600px) {
+				.keyboard-hint {
+					display: none !important;
+				}
+			}
+		</style>
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/gif.js/0.2.0/gif.js"></script>
+	</head>
+	<body class="text-white min-h-screen">
+
+
+		<div
+			id="app"
+			class="min-h-screen flex items-center justify-center p-8 animate-fade-in"
+		>
+			<div
+				class="modern-card shadow-modern p-8 space-y-8 w-full max-w-5xl glass-effect"
+			>
+				<div class="flex items-center justify-between w-full">
+					<h1
+						class="text-2xl sm:text-3xl font-bold whitespace-nowrap pr-2 tracking-tight text-white"
+					>
+						GifyCapt
+					</h1>
+				</div>
+				<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+					<div class="bg-gradient-to-br from-blue-600 to-indigo-700 border-2 border-blue-400/60 rounded-xl p-5 flex flex-col gap-3 shadow-xl">
+						<label class="text-sm font-bold text-white flex items-center"
+							><i class="fas fa-tachometer-alt mr-2 text-blue-200"></i>Frame Rate</label
+						>
+						<div class="flex items-center gap-3 w-full">
+							<input
+								type="range"
+								id="fpsSlider"
+								min="1"
+								max="30"
+								value="10"
+								class="w-full h-3 cursor-pointer"
+								style="accent-color: #60a5fa"
+							/>
+							<span
+								id="fpsValue"
+								class="text-sm font-bold w-14 text-center text-white bg-white/20 backdrop-blur px-3 py-1.5 rounded-lg border border-white/30"
+								>10fps</span
+							>
+						</div>
+					</div>
+					<div class="bg-gradient-to-br from-orange-600 to-red-600 border-2 border-orange-400/60 rounded-xl p-5 flex flex-col gap-3 shadow-xl">
+						<label class="text-sm font-bold text-white flex items-center"
+							><i class="far fa-clock mr-2 text-orange-200"></i>Duration</label
+						>
+						<div class="flex items-center gap-3 w-full">
+							<input
+								type="range"
+								id="durationSlider"
+								min="1"
+								max="10"
+								value="5"
+								class="w-full h-3 cursor-pointer"
+								style="accent-color: #fb923c"
+							/>
+							<span
+								id="durationValue"
+								class="text-sm font-bold w-14 text-center text-white bg-white/20 backdrop-blur px-3 py-1.5 rounded-lg border border-white/30"
+								>5s</span
+							>
+						</div>
+					</div>
+					<div class="bg-gradient-to-br from-purple-600 to-pink-600 border-2 border-purple-400/60 rounded-xl p-5 flex flex-col gap-3 shadow-xl">
+						<label class="text-sm font-bold text-white flex items-center"
+							><i class="fas fa-vector-square mr-2 text-purple-200"></i>Aspect Ratio</label
+						>
+						<div class="relative">
+						<select
+							id="aspectRatio"
+								class="w-full bg-gradient-to-br from-purple-600 to-purple-700 backdrop-blur-lg border-2 border-purple-300/50 rounded-xl outline-none px-4 pr-10 py-3 text-sm text-white font-bold shadow-2xl focus:ring-4 focus:ring-purple-400/30 focus:border-purple-300/70 transition-all duration-300 hover:bg-gradient-to-br hover:from-purple-500 hover:to-purple-600 hover:border-purple-300/70 appearance-none cursor-pointer"
+						>
+							<option
+								class="bg-purple-900 text-white font-semibold py-2 px-4"
+								value="free"
+							>
+								Free Form
+							</option>
+							<option
+								class="bg-purple-900 text-white font-semibold py-2 px-4"
+								value="16:9"
+							>
+								Widescreen (16:9)
+							</option>
+							<option
+								class="bg-purple-900 text-white font-semibold py-2 px-4"
+								value="4:3"
+							>
+								Standard (4:3)
+							</option>
+							<option
+								class="bg-purple-900 text-white font-semibold py-2 px-4"
+								value="1:1"
+							>
+								Square (1:1)
+							</option>
+							<option
+								class="bg-purple-900 text-white font-semibold py-2 px-4"
+								value="9:16"
+							>
+								Portrait (9:16)
+							</option>
+						</select>
+						<div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+							<svg class="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
+								<path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+							</svg>
+					</div>
+					</div>
+					</div>
+					<div class="bg-gradient-to-br from-emerald-600 to-teal-600 border-2 border-emerald-400/60 rounded-xl p-5 flex flex-col gap-3 shadow-xl">
+						<label class="text-sm font-bold text-white flex items-center"
+							><i class="fas fa-star mr-2 text-emerald-200"></i>Quality</label
+						>
+						<div class="relative">
+						<select
+							id="quality"
+								class="w-full bg-gradient-to-br from-emerald-600 to-emerald-700 backdrop-blur-lg border-2 border-emerald-300/50 rounded-xl outline-none px-4 pr-10 py-3 text-sm text-white font-bold shadow-2xl focus:ring-4 focus:ring-emerald-400/30 focus:border-emerald-300/70 transition-all duration-300 hover:bg-gradient-to-br hover:from-emerald-500 hover:to-emerald-600 hover:border-emerald-300/70 appearance-none cursor-pointer"
+						>
+							<option
+								class="bg-emerald-900 text-white font-semibold py-2 px-4"
+								value="high"
+							>
+								High Quality
+							</option>
+							<option
+								class="bg-emerald-900 text-white font-semibold py-2 px-4"
+								value="medium"
+								selected
+							>
+								Medium Quality
+							</option>
+							<option
+								class="bg-emerald-900 text-white font-semibold py-2 px-4"
+								value="low"
+							>
+								Fast & Light
+							</option>
+						</select>
+						<div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+							<svg class="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
+								<path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+							</svg>
+						</div>
+					</div>
+					</div>
+				</div>
+				<div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2 sm:gap-3 w-full">
+					<button
+						id="selectRegionBtn"
+						class="flex items-center justify-center flex-1 min-w-0 px-1 sm:px-2 py-2 sm:py-3 text-sm sm:text-base bg-gradient-to-r from-purple-500/80 to-indigo-600/80 hover:from-purple-600 hover:to-indigo-700 border border-purple-400/40 text-white outline-none rounded-lg font-semibold transition-all shadow-lg hover:shadow-xl hover:scale-[1.02]"
+					>
+						<i class="fas fa-crop-alt mr-1 sm:mr-2 text-xs sm:text-sm"></i>
+						<span class="truncate text-xs sm:text-sm md:text-base">Select Region</span>
+					</button>
+					<button
+						id="toggleRegionBtn"
+						disabled
+						class="flex items-center justify-center flex-1 min-w-0 px-1 sm:px-2 py-2 sm:py-3 text-sm sm:text-base bg-gradient-to-r from-slate-500/70 to-slate-600/70 hover:from-slate-600 hover:to-slate-700 border border-slate-400/40 text-white outline-none rounded-lg font-semibold transition-all shadow-lg hover:shadow-xl hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+					>
+						<i class="fas fa-eye mr-1 sm:mr-2 text-xs sm:text-sm"></i>
+						<span class="truncate text-xs sm:text-sm md:text-base">Show Region</span>
+					</button>
+					<button
+						id="startBtn"
+						disabled
+						class="flex items-center justify-center flex-1 min-w-0 px-0 py-3 text-base bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 border border-emerald-400/50 text-white outline-none rounded-lg font-semibold transition-all shadow-lg hover:shadow-xl hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+					>
+						<i class="fas fa-play mr-1 sm:mr-2 text-xs sm:text-sm ml-2"></i>
+						<span
+							class="truncate text-xs sm:text-sm md:text-base"
+							style="white-space: normal"
+							>Start Recording</span
+						>
+					</button>
+					<button
+						id="stopBtn"
+						disabled
+						class="flex items-center justify-center flex-1 min-w-0 px-0 py-3 text-base bg-gradient-to-r from-red-500/80 to-red-600/80 hover:from-red-600 hover:to-red-700 border border-red-400/50 text-white outline-none rounded-lg font-semibold transition-all shadow-lg hover:shadow-xl hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+					>
+						<i class="fas fa-stop mr-1 sm:mr-2 text-xs sm:text-sm"></i>
+						<span
+							class="truncate text-xs sm:text-sm md:text-base"
+							style="white-space: normal"
+							>Stop</span
+						>
+					</button>
+					<button
+						id="exportBtn"
+						disabled
+						class="flex items-center justify-center flex-1 min-w-0 px-0 py-3 text-base bg-gradient-to-r from-blue-500 to-cyan-600 hover:from-blue-600 hover:to-cyan-700 border border-blue-400/50 text-white outline-none rounded-lg font-semibold transition-all shadow-lg hover:shadow-xl hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+					>
+						<i class="fas fa-download mr-1 sm:mr-2 text-xs sm:text-sm"></i>
+						<span
+							class="truncate text-xs sm:text-sm md:text-base"
+							style="white-space: normal"
+							>Export GIF</span
+						>
+					</button>
+					<button
+						id="deleteBtn"
+						disabled
+						class="flex items-center justify-center flex-1 min-w-0 px-0 py-3 text-base bg-gradient-to-r from-rose-500/70 to-red-600/70 hover:from-rose-600 hover:to-red-700 border border-rose-400/50 text-white outline-none rounded-lg font-semibold transition-all shadow-lg hover:shadow-xl hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+					>
+						<i class="fas fa-trash-alt mr-1 sm:mr-2 text-xs sm:text-sm"></i>
+						<span
+							class="truncate text-xs sm:text-sm md:text-base"
+							style="white-space: normal"
+							>Delete</span
+						>
+					</button>
+				</div>
+				<div
+					id="progressContainer"
+					class="hidden mb-8"
+				>
+					<div class="bg-slate-800/70 backdrop-blur-lg border border-slate-600/50 rounded-2xl p-6 shadow-xl">
+						<div class="flex items-center justify-between mb-4">
+							<h3 class="text-lg font-bold text-white flex items-center">
+								<i class="fas fa-video mr-2 text-red-400"></i>Recording Progress
+							</h3>
+							<div class="flex items-center space-x-2">
+								<div class="w-3 h-3 bg-red-500 rounded-full animate-pulse shadow-lg"></div>
+								<span class="text-sm font-medium text-red-300">Recording</span>
+							</div>
+						</div>
+						<div class="bg-slate-700/60 rounded-full p-1.5 border border-slate-600/40 shadow-inner">
+							<div
+								id="progressBar"
+								class="bg-gradient-to-r from-orange-400 via-red-500 to-pink-500 h-4 rounded-full shadow-lg"
+								style="width: 0%; transition: none;"
+							></div>
+						</div>
+						<div class="mt-4 text-center">
+							<span
+								id="progressText"
+								class="text-sm font-medium text-slate-200"
+								>Recording...</span
+							>
+						</div>
+					</div>
+				</div>
+
+				<div
+					id="previewSection"
+					class="hidden"
+				>
+					<h3 class="text-2xl font-bold mb-6 text-white">
+						<i class="fas fa-play-circle mr-3 text-blue-400"></i>Preview & Timeline
+					</h3>
+					<div class="bg-slate-800/60 backdrop-blur-lg border border-slate-600/40 rounded-2xl p-8 shadow-2xl">
+						<div class="bg-black/40 rounded-xl p-4 mb-6 border border-slate-700/50">
+						<canvas
+							id="previewCanvas"
+								class="w-full rounded-lg shadow-lg max-h-96 object-contain bg-gray-900"
+								style="min-height: 300px;"
+						></canvas>
+						</div>
+						<div class="bg-slate-700/40 border border-slate-600/30 rounded-xl p-5">
+							<div class="flex items-center justify-between mb-4">
+								<span class="text-sm font-medium text-slate-200 flex items-center"
+									><i class="fas fa-film mr-2 text-purple-400"></i>Timeline Control</span
+								>
+								<div class="flex items-center gap-4">
+								<span
+									id="frameCount"
+										class="text-sm font-mono text-blue-300 bg-blue-500/20 px-2 py-1 rounded"
+									>0 frames</span
+								>
+									<div class="text-sm font-mono text-slate-300">
+										<span id="currentTime" class="text-emerald-400">0.0s</span> 
+										<span class="text-slate-500">/</span>
+										<span id="totalTime" class="text-orange-400">0.0s</span>
+									</div>
+								</div>
+							</div>
+							<div
+								id="timeline"
+								class="relative h-20 bg-slate-800/60 border-2 border-slate-600/40 rounded-xl overflow-hidden cursor-pointer shadow-inner mb-5"
+							>
+								<div
+									id="timelineFrames"
+									class="absolute inset-0 flex"
+								></div>
+								<div
+									id="timelineMarker"
+									class="absolute top-0 w-1 h-full bg-gradient-to-b from-cyan-400 to-blue-500 shadow-lg rounded-full"
+								></div>
+							</div>
+							<div class="flex gap-3 items-center justify-center">
+								<button
+									id="playBtn"
+									class="px-6 py-3 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 border border-emerald-400/50 text-white rounded-xl text-sm font-semibold transition-all shadow-lg hover:shadow-xl hover:scale-105 flex items-center"
+								>
+									<i class="fas fa-play mr-2"></i>Play Preview
+								</button>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+		<div
+			id="regionSelector"
+			class="fixed inset-0 z-50 hidden"
+		>
+			<div class="absolute inset-0 bg-black bg-opacity-50"></div>
+			<div
+				id="selectionBox"
+				class="absolute border-2 border-vibrantGreen bg-vibrantGreen bg-opacity-20 hidden"
+			>
+				<div
+					class="absolute -top-8 left-0 bg-vibrantGreen px-2 py-1 rounded text-xs whitespace-nowrap"
+				>
+					<span id="selectionSize"><i class="fas fa-ruler-combined mr-1"></i>0 × 0</span>
+				</div>
+				<div
+					class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-white text-sm font-semibold pointer-events-none"
+				>
+					<i class="fas fa-mouse-pointer mr-2"></i>Click and drag to select region
+				</div>
+			</div>
+			<div class="absolute top-4 left-4 text-white text-sm">
+				<p>
+					<i class="fas fa-info-circle mr-2"></i>Click and drag to select the area you
+					want to record
+				</p>
+				<p class="mt-1"><i class="fas fa-times mr-2"></i>Press ESC to cancel</p>
+			</div>
+		</div>
+
+		<div
+			id="selectedRegionOverlay"
+			class="fixed inset-0 z-40 hidden pointer-events-none"
+		>
+			<div
+				id="selectedRegionBox"
+				class="absolute border-4 border-lightGreen bg-lightGreen bg-opacity-20 rounded-lg"
+			>
+				<div
+					class="absolute -top-10 left-0 bg-vibrantGreen px-3 py-1 rounded-lg text-sm font-semibold text-white"
+				>
+					<i class="fas fa-check mr-2"></i>Selected Region
+				</div>
+				<div
+					class="absolute top-2 right-2 bg-vibrantGreen px-2 py-1 rounded text-xs text-white"
+				>
+					<span id="selectedRegionSize">0 × 0</span>
+				</div>
+			</div>
+		</div>
+		<div
+			id="keyboardHint"
+			class="keyboard-hint"
+		>
+			<div class="text-xs text-gray-300 mb-1">Keyboard Shortcuts:</div>
+			<div class="text-xs">
+				<div><kbd class="bg-gray-700 px-1 rounded">Space</kbd> or <kbd class="bg-gray-700 px-1 rounded">S</kbd> - Start/Stop Recording</div>
+				<div><kbd class="bg-gray-700 px-1 rounded">Esc</kbd> - Cancel/Stop</div>
+				<div><kbd class="bg-gray-700 px-1 rounded">←→</kbd> - Navigate Frames</div>
+				<div><kbd class="bg-gray-700 px-1 rounded">Ctrl+P</kbd> - Toggle Playback</div>
+			</div>
+		</div>
+
+		<!-- Custom Modal -->
+		<div
+			id="customModal"
+			class="fixed inset-0 z-[9999] hidden"
+		>
+			<!-- Modal Backdrop -->
+			<div class="absolute inset-0 bg-black/60 backdrop-blur-sm"></div>
+			
+			<!-- Modal Container -->
+			<div class="fixed inset-0 flex items-center justify-center p-4">
+				<div 
+					id="modalContent"
+					class="bg-gradient-to-br from-slate-800 to-slate-900 border-2 border-slate-600/50 rounded-2xl shadow-2xl max-w-md w-full mx-4 transform transition-all duration-300 scale-95 opacity-0"
+				>
+					<!-- Modal Header -->
+					<div class="flex items-center justify-between p-6 border-b border-slate-700/50">
+						<h3 id="modalTitle" class="text-xl font-bold text-white flex items-center">
+							<i id="modalIcon" class="fas fa-question-circle mr-3 text-blue-400"></i>
+							Confirm Action
+						</h3>
+					</div>
+					
+					<!-- Modal Body -->
+					<div class="p-6">
+						<p id="modalMessage" class="text-slate-300 text-base leading-relaxed">
+							Are you sure you want to proceed?
+						</p>
+					</div>
+					
+					<!-- Modal Footer -->
+					<div class="flex items-center justify-end gap-3 p-6 border-t border-slate-700/50">
+						<button
+							id="modalCancelBtn"
+							class="px-6 py-3 bg-gradient-to-r from-slate-600 to-slate-700 hover:from-slate-700 hover:to-slate-800 border border-slate-500/50 text-white font-semibold rounded-lg transition-all shadow-lg hover:shadow-xl hover:scale-105"
+						>
+							<i class="fas fa-times mr-2"></i>Cancel
+						</button>
+						<button
+							id="modalConfirmBtn"
+							class="px-6 py-3 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 border border-red-400/50 text-white font-semibold rounded-lg transition-all shadow-lg hover:shadow-xl hover:scale-105"
+						>
+							<i class="fas fa-check mr-2"></i>Confirm
+						</button>
+					</div>
+				</div>
+			</div>
+		</div>
+		<!-- Worker Blob embebido y código principal JS -->
+		<script>
+			const GIF_WORKER_CODE = `// gif.worker.js 0.2.0 - https://github.com/jnordberg/gif.js
+(function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){var NeuQuant=require("./TypedNeuQuant.js");var LZWEncoder=require("./LZWEncoder.js");function ByteArray(){this.page=-1;this.pages=[];this.newPage()}ByteArray.pageSize=4096;ByteArray.charMap={};for(var i=0;i<256;i++)ByteArray.charMap[i]=String.fromCharCode(i);ByteArray.prototype.newPage=function(){this.pages[++this.page]=new Uint8Array(ByteArray.pageSize);this.cursor=0};ByteArray.prototype.getData=function(){var rv="";for(var p=0;p<this.pages.length;p++){for(var i=0;i<ByteArray.pageSize;i++){rv+=ByteArray.charMap[this.pages[p][i]]}}return rv};ByteArray.prototype.writeByte=function(val){if(this.cursor>=ByteArray.pageSize)this.newPage();this.pages[this.page][this.cursor++]=val};ByteArray.prototype.writeUTFBytes=function(string){for(var l=string.length,i=0;i<l;i++)this.writeByte(string.charCodeAt(i))};ByteArray.prototype.writeBytes=function(array,offset,length){for(var l=length||array.length,i=offset||0;i<l;i++)this.writeByte(array[i])};function GIFEncoder(width,height){this.width=~~width;this.height=~~height;this.transparent=null;this.transIndex=0;this.repeat=-1;this.delay=0;this.image=null;this.pixels=null;this.indexedPixels=null;this.colorDepth=null;this.colorTab=null;this.neuQuant=null;this.usedEntry=new Array;this.palSize=7;this.dispose=-1;this.firstFrame=true;this.sample=10;this.dither=false;this.globalPalette=false;this.out=new ByteArray}GIFEncoder.prototype.setDelay=function(milliseconds){this.delay=Math.round(milliseconds/10)};GIFEncoder.prototype.setFrameRate=function(fps){this.delay=Math.round(100/fps)};GIFEncoder.prototype.setDispose=function(disposalCode){if(disposalCode>=0)this.dispose=disposalCode};GIFEncoder.prototype.setRepeat=function(repeat){this.repeat=repeat};GIFEncoder.prototype.setTransparent=function(color){this.transparent=color};GIFEncoder.prototype.addFrame=function(imageData){this.image=imageData;this.colorTab=this.globalPalette&&this.globalPalette.slice?this.globalPalette:null;this.getImagePixels();this.analyzePixels();if(this.globalPalette===true)this.globalPalette=this.colorTab;if(this.firstFrame){this.writeLSD();this.writePalette();if(this.repeat>=0){this.writeNetscapeExt()}}this.writeGraphicCtrlExt();this.writeImageDesc();if(!this.firstFrame&&!this.globalPalette)this.writePalette();this.writePixels();this.firstFrame=false};GIFEncoder.prototype.finish=function(){this.out.writeByte(59)};GIFEncoder.prototype.setQuality=function(quality){if(quality<1)quality=1;this.sample=quality};GIFEncoder.prototype.setDither=function(dither){if(dither===true)dither="FloydSteinberg";this.dither=dither};GIFEncoder.prototype.setGlobalPalette=function(palette){this.globalPalette=palette};GIFEncoder.prototype.getGlobalPalette=function(){return this.globalPalette&&this.globalPalette.slice&&this.globalPalette.slice(0)||this.globalPalette};GIFEncoder.prototype.writeHeader=function(){this.out.writeUTFBytes("GIF89a")};GIFEncoder.prototype.analyzePixels=function(){if(!this.colorTab){this.neuQuant=new NeuQuant(this.pixels,this.sample);this.neuQuant.buildColormap();this.colorTab=this.neuQuant.getColormap()}if(this.dither){this.ditherPixels(this.dither.replace("-serpentine",""),this.dither.match(/-serpentine/)!==null)}else{this.indexPixels()}this.pixels=null;this.colorDepth=8;this.palSize=7;if(this.transparent!==null){this.transIndex=this.findClosest(this.transparent,true)}};GIFEncoder.prototype.indexPixels=function(imgq){var nPix=this.pixels.length/3;this.indexedPixels=new Uint8Array(nPix);var k=0;for(var j=0;j<nPix;j++){var index=this.findClosestRGB(this.pixels[k++]&255,this.pixels[k++]&255,this.pixels[k++]&255);this.usedEntry[index]=true;this.indexedPixels[j]=index}};GIFEncoder.prototype.ditherPixels=function(kernel,serpentine){var kernels={FalseFloydSteinberg:[[3/8,1,0],[3/8,0,1],[2/8,1,1]],FloydSteinberg:[[7/16,1,0],[3/16,-1,1],[5/16,0,1],[1/16,1,1]],Stucki:[[8/42,1,0],[4/42,2,0],[2/42,-2,1],[4/42,-1,1],[8/42,0,1],[4/42,1,1],[2/42,2,1],[1/42,-2,2],[2/42,-1,2],[4/42,0,2],[2/42,1,2],[1/42,2,2]],Atkinson:[[1/8,1,0],[1/8,2,0],[1/8,-1,1],[1/8,0,1],[1/8,1,1],[1/8,0,2]]};if(!kernel||!kernels[kernel]){throw"Unknown dithering kernel: "+kernel}var ds=kernels[kernel];var index=0,height=this.height,width=this.width,data=this.pixels;var direction=serpentine?-1:1;this.indexedPixels=new Uint8Array(this.pixels.length/3);for(var y=0;y<height;y++){if(serpentine)direction=direction*-1;for(var x=direction==1?0:width-1,xend=direction==1?width:0;x!==xend;x+=direction){index=y*width+x;var idx=index*3;var r1=data[idx];var g1=data[idx+1];var b1=data[idx+2];idx=this.findClosestRGB(r1,g1,b1);this.usedEntry[idx]=true;this.indexedPixels[index]=idx;idx*=3;var r2=this.colorTab[idx];var g2=this.colorTab[idx+1];var b2=this.colorTab[idx+2];var er=r1-r2;var eg=g1-g2;var eb=b1-b2;for(var i=direction==1?0:ds.length-1,end=direction==1?ds.length:0;i!==end;i+=direction){var x1=ds[i][1];var y1=ds[i][2];if(x1+x>=0&&x1+x<width&&y1+y>=0&&y1+y<height){var d=ds[i][0];idx=index+x1+y1*width;idx*=3;data[idx]=Math.max(0,Math.min(255,data[idx]+er*d));data[idx+1]=Math.max(0,Math.min(255,data[idx+1]+eg*d));data[idx+2]=Math.max(0,Math.min(255,data[idx+2]+eb*d))}}}}};GIFEncoder.prototype.findClosest=function(c,used){return this.findClosestRGB((c&16711680)>>16,(c&65280)>>8,c&255,used)};GIFEncoder.prototype.findClosestRGB=function(r,g,b,used){if(this.colorTab===null)return-1;if(this.neuQuant&&!used){return this.neuQuant.lookupRGB(r,g,b)}var c=b|g<<8|r<<16;var minpos=0;var dmin=256*256*256;var len=this.colorTab.length;for(var i=0,index=0;i<len;index++){var dr=r-(this.colorTab[i++]&255);var dg=g-(this.colorTab[i++]&255);var db=b-(this.colorTab[i++]&255);var d=dr*dr+dg*dg+db*db;if((!used||this.usedEntry[index])&&d<dmin){dmin=d;minpos=index}}return minpos};GIFEncoder.prototype.getImagePixels=function(){var w=this.width;var h=this.height;this.pixels=new Uint8Array(w*h*3);var data=this.image;var srcPos=0;var count=0;for(var i=0;i<h;i++){for(var j=0;j<w;j++){this.pixels[count++]=data[srcPos++];this.pixels[count++]=data[srcPos++];this.pixels[count++]=data[srcPos++];srcPos++}}};GIFEncoder.prototype.writeGraphicCtrlExt=function(){this.out.writeByte(33);this.out.writeByte(249);this.out.writeByte(4);var transp,disp;if(this.transparent===null){transp=0;disp=0}else{transp=1;disp=2}if(this.dispose>=0){disp=dispose&7}disp<<=2;this.out.writeByte(0|disp|0|transp);this.writeShort(this.delay);this.out.writeByte(this.transIndex);this.out.writeByte(0)};GIFEncoder.prototype.writeImageDesc=function(){this.out.writeByte(44);this.writeShort(0);this.writeShort(0);this.writeShort(this.width);this.writeShort(this.height);if(this.firstFrame||this.globalPalette){this.out.writeByte(0)}else{this.out.writeByte(128|0|0|0|this.palSize)}};GIFEncoder.prototype.writeLSD=function(){this.writeShort(this.width);this.writeShort(this.height);this.out.writeByte(128|112|0|this.palSize);this.out.writeByte(0);this.out.writeByte(0)};GIFEncoder.prototype.writeNetscapeExt=function(){this.out.writeByte(33);this.out.writeByte(255);this.out.writeByte(11);this.out.writeUTFBytes("NETSCAPE2.0");this.out.writeByte(3);this.out.writeByte(1);this.writeShort(this.repeat);this.out.writeByte(0)};GIFEncoder.prototype.writePalette=function(){this.out.writeBytes(this.colorTab);var n=3*256-this.colorTab.length;for(var i=0;i<n;i++)this.out.writeByte(0)};GIFEncoder.prototype.writeShort=function(pValue){this.out.writeByte(pValue&255);this.out.writeByte(pValue>>8&255)};GIFEncoder.prototype.writePixels=function(){var enc=new LZWEncoder(this.width,this.height,this.indexedPixels,this.colorDepth);enc.encode(this.out)};GIFEncoder.prototype.stream=function(){return this.out};module.exports=GIFEncoder},{"./LZWEncoder.js":2,"./TypedNeuQuant.js":3}],2:[function(require,module,exports){var EOF=-1;var BITS=12;var HSIZE=5003;var masks=[0,1,3,7,15,31,63,127,255,511,1023,2047,4095,8191,16383,32767,65535];function LZWEncoder(width,height,pixels,colorDepth){var initCodeSize=Math.max(2,colorDepth);var accum=new Uint8Array(256);var htab=new Int32Array(HSIZE);var codetab=new Int32Array(HSIZE);var cur_accum,cur_bits=0;var a_count;var free_ent=0;var maxcode;var clear_flg=false;var g_init_bits,ClearCode,EOFCode;function char_out(c,outs){accum[a_count++]=c;if(a_count>=254)flush_char(outs)}function cl_block(outs){cl_hash(HSIZE);free_ent=ClearCode+2;clear_flg=true;output(ClearCode,outs)}function cl_hash(hsize){for(var i=0;i<hsize;++i)htab[i]=-1}function compress(init_bits,outs){var fcode,c,i,ent,disp,hsize_reg,hshift;g_init_bits=init_bits;clear_flg=false;n_bits=g_init_bits;maxcode=MAXCODE(n_bits);ClearCode=1<<init_bits-1;EOFCode=ClearCode+1;free_ent=ClearCode+2;a_count=0;ent=nextPixel();hshift=0;for(fcode=HSIZE;fcode<65536;fcode*=2)++hshift;hshift=8-hshift;hsize_reg=HSIZE;cl_hash(hsize_reg);output(ClearCode,outs);outer_loop:while((c=nextPixel())!=EOF){fcode=(c<<BITS)+ent;i=c<<hshift^ent;if(htab[i]===fcode){ent=codetab[i];continue}else if(htab[i]>=0){disp=hsize_reg-i;if(i===0)disp=1;do{if((i-=disp)<0)i+=hsize_reg;if(htab[i]===fcode){ent=codetab[i];continue outer_loop}}while(htab[i]>=0)}output(ent,outs);ent=c;if(free_ent<1<<BITS){codetab[i]=free_ent++;htab[i]=fcode}else{cl_block(outs)}}output(ent,outs);output(EOFCode,outs)}function encode(outs){outs.writeByte(initCodeSize);remaining=width*height;curPixel=0;compress(initCodeSize+1,outs);outs.writeByte(0)}function flush_char(outs){if(a_count>0){outs.writeByte(a_count);outs.writeBytes(accum,0,a_count);a_count=0}}function MAXCODE(n_bits){return(1<<n_bits)-1}function nextPixel(){if(remaining===0)return EOF;--remaining;var pix=pixels[curPixel++];return pix&255}function output(code,outs){cur_accum&=masks[cur_bits];if(cur_bits>0)cur_accum|=code<<cur_bits;else cur_accum=code;cur_bits+=n_bits;while(cur_bits>=8){char_out(cur_accum&255,outs);cur_accum>>=8;cur_bits-=8}if(free_ent>maxcode||clear_flg){if(clear_flg){maxcode=MAXCODE(n_bits=g_init_bits);clear_flg=false}else{++n_bits;if(n_bits==BITS)maxcode=1<<BITS;else maxcode=MAXCODE(n_bits)}}if(code==EOFCode){while(cur_bits>0){char_out(cur_accum&255,outs);cur_accum>>=8;cur_bits-=8}flush_char(outs)}}this.encode=encode}module.exports=LZWEncoder},{}],3:[function(require,module,exports){var ncycles=100;var netsize=256;var maxnetpos=netsize-1;var netbiasshift=4;var intbiasshift=16;var intbias=1<<intbiasshift;var gammashift=10;var gamma=1<<gammashift;var betashift=10;var beta=intbias>>betashift;var betagamma=intbias<<gammashift-betashift;var initrad=netsize>>3;var radiusbiasshift=6;var radiusbias=1<<radiusbiasshift;var initradius=initrad*radiusbias;var radiusdec=30;var alphabiasshift=10;var initalpha=1<<alphabiasshift;var alphadec;var radbiasshift=8;var radbias=1<<radbiasshift;var alpharadbshift=alphabiasshift+radbiasshift;var alpharadbias=1<<alpharadbshift;var prime1=499;var prime2=491;var prime3=487;var prime4=503;var minpicturebytes=3*prime4;function NeuQuant(pixels,samplefac){var network;var netindex;var bias;var freq;var radpower;function init(){network=[];netindex=new Int32Array(256);bias=new Int32Array(netsize);freq=new Int32Array(netsize);radpower=new Int32Array(netsize>>3);var i,v;for(i=0;i<netsize;i++){v=(i<<netbiasshift+8)/netsize;network[i]=new Float64Array([v,v,v,0]);freq[i]=intbias/netsize;bias[i]=0}}function unbiasnet(){for(var i=0;i<netsize;i++){network[i][0]>>=netbiasshift;network[i][1]>>=netbiasshift;network[i][2]>>=netbiasshift;network[i][3]=i}}function altersingle(alpha,i,b,g,r){network[i][0]-=alpha*(network[i][0]-b)/initalpha;network[i][1]-=alpha*(network[i][1]-g)/initalpha;network[i][2]-=alpha*(network[i][2]-r)/initalpha}function alterneigh(radius,i,b,g,r){var lo=Math.abs(i-radius);var hi=Math.min(i+radius,netsize);var j=i+1;var k=i-1;var m=1;var p,a;while(j<hi||k>lo){a=radpower[m++];if(j<hi){p=network[j++];p[0]-=a*(p[0]-b)/alpharadbias;p[1]-=a*(p[1]-g)/alpharadbias;p[2]-=a*(p[2]-r)/alpharadbias}if(k>lo){p=network[k--];p[0]-=a*(p[0]-b)/alpharadbias;p[1]-=a*(p[1]-g)/alpharadbias;p[2]-=a*(p[2]-r)/alpharadbias}}}function contest(b,g,r){var bestd=~(1<<31);var bestbiasd=bestd;var bestpos=-1;var bestbiaspos=bestpos;var i,n,dist,biasdist,betafreq;for(i=0;i<netsize;i++){n=network[i];dist=Math.abs(n[0]-b)+Math.abs(n[1]-g)+Math.abs(n[2]-r);if(dist<bestd){bestd=dist;bestpos=i}biasdist=dist-(bias[i]>>intbiasshift-netbiasshift);if(biasdist<bestbiasd){bestbiasd=biasdist;bestbiaspos=i}betafreq=freq[i]>>betashift;freq[i]-=betafreq;bias[i]+=betafreq<<gammashift}freq[bestpos]+=beta;bias[bestpos]-=betagamma;return bestbiaspos}function inxbuild(){var i,j,p,q,smallpos,smallval,previouscol=0,startpos=0;for(i=0;i<netsize;i++){p=network[i];smallpos=i;smallval=p[1];for(j=i+1;j<netsize;j++){q=network[j];if(q[1]<smallval){smallpos=j;smallval=q[1]}}q=network[smallpos];if(i!=smallpos){j=q[0];q[0]=p[0];p[0]=j;j=q[1];q[1]=p[1];p[1]=j;j=q[2];q[2]=p[2];p[2]=j;j=q[3];q[3]=p[3];p[3]=j}if(smallval!=previouscol){netindex[previouscol]=startpos+i>>1;for(j=previouscol+1;j<smallval;j++)netindex[j]=i;previouscol=smallval;startpos=i}}netindex[previouscol]=startpos+maxnetpos>>1;for(j=previouscol+1;j<256;j++)netindex[j]=maxnetpos}function inxsearch(b,g,r){var a,p,dist;var bestd=1e3;var best=-1;var i=netindex[g];var j=i-1;while(i<netsize||j>=0){if(i<netsize){p=network[i];dist=p[1]-g;if(dist>=bestd)i=netsize;else{i++;if(dist<0)dist=-dist;a=p[0]-b;if(a<0)a=-a;dist+=a;if(dist<bestd){a=p[2]-r;if(a<0)a=-a;dist+=a;if(dist<bestd){bestd=dist;best=p[3]}}}}if(j>=0){p=network[j];dist=g-p[1];if(dist>=bestd)j=-1;else{j--;if(dist<0)dist=-dist;a=p[0]-b;if(a<0)a=-a;dist+=a;if(dist<bestd){a=p[2]-r;if(a<0)a=-a;dist+=a;if(dist<bestd){bestd=dist;best=p[3]}}}}}return best}function learn(){var i;var lengthcount=pixels.length;var alphadec=30+(samplefac-1)/3;var samplepixels=lengthcount/(3*samplefac);var delta=~~(samplepixels/ncycles);var alpha=initalpha;var radius=initradius;var rad=radius>>radiusbiasshift;if(rad<=1)rad=0;for(i=0;i<rad;i++)radpower[i]=alpha*((rad*rad-i*i)*radbias/(rad*rad));var step;if(lengthcount<minpicturebytes){samplefac=1;step=3}else if(lengthcount%prime1!==0){step=3*prime1}else if(lengthcount%prime2!==0){step=3*prime2}else if(lengthcount%prime3!==0){step=3*prime3}else{step=3*prime4}var b,g,r,j;var pix=0;i=0;while(i<samplepixels){b=(pixels[pix]&255)<<netbiasshift;g=(pixels[pix+1]&255)<<netbiasshift;r=(pixels[pix+2]&255)<<netbiasshift;j=contest(b,g,r);altersingle(alpha,j,b,g,r);if(rad!==0)alterneigh(rad,j,b,g,r);pix+=step;if(pix>=lengthcount)pix-=lengthcount;i++;if(delta===0)delta=1;if(i%delta===0){alpha-=alpha/alphadec;radius-=radius/radiusdec;rad=radius>>radiusbiasshift;if(rad<=1)rad=0;for(j=0;j<rad;j++)radpower[j]=alpha*((rad*rad-j*j)*radbias/(rad*rad))}}}function buildColormap(){init();learn();unbiasnet();inxbuild()}this.buildColormap=buildColormap;function getColormap(){var map=[];var index=[];for(var i=0;i<netsize;i++)index[network[i][3]]=i;var k=0;for(var l=0;l<netsize;l++){var j=index[l];map[k++]=network[j][0];map[k++]=network[j][1];map[k++]=network[j][2]}return map}this.getColormap=getColormap;this.lookupRGB=inxsearch}module.exports=NeuQuant},{}],4:[function(require,module,exports){var GIFEncoder,renderFrame;GIFEncoder=require("./GIFEncoder.js");renderFrame=function(frame){var encoder,page,stream,transfer;encoder=new GIFEncoder(frame.width,frame.height);if(frame.index===0){encoder.writeHeader()}else{encoder.firstFrame=false}encoder.setTransparent(frame.transparent);encoder.setRepeat(frame.repeat);encoder.setDelay(frame.delay);encoder.setQuality(frame.quality);encoder.setDither(frame.dither);encoder.setGlobalPalette(frame.globalPalette);encoder.addFrame(frame.data);if(frame.last){encoder.finish()}if(frame.globalPalette===true){frame.globalPalette=encoder.getGlobalPalette()}stream=encoder.stream();frame.data=stream.pages;frame.cursor=stream.cursor;frame.pageSize=stream.constructor.pageSize;if(frame.canTransfer){transfer=function(){var i,len,ref,results;ref=frame.data;results=[];for(i=0,len=ref.length;i<len;i++){page=ref[i];results.push(page.buffer)}return results}();return self.postMessage(frame,transfer)}else{return self.postMessage(frame)}};self.onmessage=function(event){return renderFrame(event.data)}},{"./GIFEncoder.js":1}]},{},[4]);
+//# sourceMappingURL=gif.worker.js.map`;
+
+			const gifWorkerBlob = new Blob([GIF_WORKER_CODE], { type: "application/javascript" });
+			const gifWorkerUrl = URL.createObjectURL(gifWorkerBlob);
+			// Central app state - tracks recording settings and runtime data
+			const state = {
+				isRecording: false,
+				isSelecting: false,
+				selectedRegion: null, // User-defined capture area
+				regionVisible: false,
+				frames: [], // Captured video frames
+				currentFrame: 0,
+				fps: 10,
+				duration: 5,
+				aspectRatio: "free",
+				quality: "medium",
+				stream: null, // MediaStream from getDisplayMedia
+				mediaRecorder: null,
+				recordingStartTime: null,
+				animationId: null,
+				gif: null,
+				captureRequestId: null,
+				videoElement: null, // For frame capture
+				canvasElement: null, // For frame processing
+				isTabActive: true,
+				blobUrls: new Set(), // Track blob URLs for cleanup
+			};
+
+			const elements = {
+				deleteBtn: document.getElementById("deleteBtn"),
+				app: document.getElementById("app"),
+				fpsSlider: document.getElementById("fpsSlider"),
+				fpsValue: document.getElementById("fpsValue"),
+				durationSlider: document.getElementById("durationSlider"),
+				durationValue: document.getElementById("durationValue"),
+				aspectRatio: document.getElementById("aspectRatio"),
+				quality: document.getElementById("quality"),
+				selectRegionBtn: document.getElementById("selectRegionBtn"),
+				toggleRegionBtn: document.getElementById("toggleRegionBtn"),
+				startBtn: document.getElementById("startBtn"),
+				stopBtn: document.getElementById("stopBtn"),
+				exportBtn: document.getElementById("exportBtn"),
+				progressContainer: document.getElementById("progressContainer"),
+				progressBar: document.getElementById("progressBar"),
+				progressText: document.getElementById("progressText"),
+				previewSection: document.getElementById("previewSection"),
+				previewCanvas: document.getElementById("previewCanvas"),
+				timeline: document.getElementById("timeline"),
+				timelineFrames: document.getElementById("timelineFrames"),
+				timelineMarker: document.getElementById("timelineMarker"),
+				frameCount: document.getElementById("frameCount"),
+				playBtn: document.getElementById("playBtn"),
+				currentTime: document.getElementById("currentTime"),
+				totalTime: document.getElementById("totalTime"),
+				regionSelector: document.getElementById("regionSelector"),
+				selectionBox: document.getElementById("selectionBox"),
+				selectionSize: document.getElementById("selectionSize"),
+				selectedRegionOverlay: document.getElementById("selectedRegionOverlay"),
+				selectedRegionBox: document.getElementById("selectedRegionBox"),
+				selectedRegionSize: document.getElementById("selectedRegionSize"),
+				keyboardHint: document.getElementById("keyboardHint"),
+			};
+
+
+
+			// Custom Modal System
+			const modal = {
+				element: document.getElementById("customModal"),
+				content: document.getElementById("modalContent"),
+				title: document.getElementById("modalTitle"),
+				icon: document.getElementById("modalIcon"),
+				message: document.getElementById("modalMessage"),
+				confirmBtn: document.getElementById("modalConfirmBtn"),
+				cancelBtn: document.getElementById("modalCancelBtn"),
+				
+				show(options) {
+					return new Promise((resolve) => {
+						// Set modal content
+						this.title.innerHTML = `<i class="${options.icon || 'fas fa-question-circle'} mr-3 ${options.iconColor || 'text-blue-400'}"></i>${options.title || 'Confirm Action'}`;
+						this.message.textContent = options.message || 'Are you sure you want to proceed?';
+						
+						// Set button styles and text based on type
+						if (options.type === 'danger') {
+							this.confirmBtn.className = "px-6 py-3 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 border border-red-400/50 text-white font-semibold rounded-lg transition-all shadow-lg hover:shadow-xl hover:scale-105";
+							this.confirmBtn.innerHTML = `<i class="fas fa-trash mr-2"></i>${options.confirmText || 'Delete'}`;
+						} else if (options.type === 'warning') {
+							this.confirmBtn.className = "px-6 py-3 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 border border-orange-400/50 text-white font-semibold rounded-lg transition-all shadow-lg hover:shadow-xl hover:scale-105";
+							this.confirmBtn.innerHTML = `<i class="fas fa-exclamation-triangle mr-2"></i>${options.confirmText || 'Continue'}`;
+						} else {
+							this.confirmBtn.className = "px-6 py-3 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 border border-blue-400/50 text-white font-semibold rounded-lg transition-all shadow-lg hover:shadow-xl hover:scale-105";
+							this.confirmBtn.innerHTML = `<i class="fas fa-check mr-2"></i>${options.confirmText || 'Confirm'}`;
+						}
+						
+						this.cancelBtn.innerHTML = `<i class="fas fa-times mr-2"></i>${options.cancelText || 'Cancel'}`;
+						
+						// Show modal with animation
+						this.element.classList.remove("hidden");
+						requestAnimationFrame(() => {
+							this.content.classList.remove("scale-95", "opacity-0");
+							this.content.classList.add("scale-100", "opacity-100");
+						});
+						
+						// Handle button clicks
+						const handleConfirm = () => {
+							this.hide();
+							this.confirmBtn.removeEventListener("click", handleConfirm);
+							this.cancelBtn.removeEventListener("click", handleCancel);
+							document.removeEventListener("keydown", handleKeydown);
+							resolve(true);
+						};
+						
+						const handleCancel = () => {
+							this.hide();
+							this.confirmBtn.removeEventListener("click", handleConfirm);
+							this.cancelBtn.removeEventListener("click", handleCancel);
+							document.removeEventListener("keydown", handleKeydown);
+							resolve(false);
+						};
+						
+						const handleKeydown = (e) => {
+							if (e.key === "Escape") {
+								e.preventDefault();
+								handleCancel();
+							} else if (e.key === "Enter") {
+								e.preventDefault();
+								handleConfirm();
+							}
+						};
+						
+						// Add event listeners
+						this.confirmBtn.addEventListener("click", handleConfirm);
+						this.cancelBtn.addEventListener("click", handleCancel);
+						document.addEventListener("keydown", handleKeydown);
+						
+						// Close on backdrop click
+						this.element.addEventListener("click", (e) => {
+							if (e.target === this.element) {
+								handleCancel();
+							}
+						});
+					});
+				},
+				
+				hide() {
+					this.content.classList.remove("scale-100", "opacity-100");
+					this.content.classList.add("scale-95", "opacity-0");
+					
+					setTimeout(() => {
+						this.element.classList.add("hidden");
+					}, 300);
+				}
+			};
+
+			// Add tab visibility handling to prevent recording issues
+			document.addEventListener("visibilitychange", () => {
+				state.isTabActive = !document.hidden;
+				
+				if (state.isRecording && document.hidden) {
+					console.log("Tab became inactive during recording");
+					// Show warning but continue recording
+					showTabInactiveWarning();
+				} else if (state.isRecording && !document.hidden) {
+					console.log("Tab became active during recording");
+					hideTabInactiveWarning();
+				}
+			});
+
+			function showTabInactiveWarning() {
+				// Remove existing warning first
+				const existing = document.getElementById("tab-inactive-warning");
+				if (existing) existing.remove();
+
+				const warningDiv = document.createElement("div");
+				warningDiv.id = "tab-inactive-warning";
+				warningDiv.className = "fixed top-20 right-4 bg-orange-500 text-white px-4 py-2 rounded-lg shadow-lg z-50 max-w-sm";
+				warningDiv.innerHTML = `
+					<div class="flex items-start gap-3">
+						<i class="fas fa-exclamation-triangle mt-1"></i>
+						<div>
+							<div class="font-semibold">Tab Inactive</div>
+							<div class="text-sm mt-1">Recording continues but may be affected. Keep this tab active for best results.</div>
+						</div>
+					</div>
+				`;
+				document.body.appendChild(warningDiv);
+			}
+
+			function hideTabInactiveWarning() {
+				const existing = document.getElementById("tab-inactive-warning");
+				if (existing) existing.remove();
+			}
+
+			// Comprehensive cleanup: prevents conflicts between recording sessions
+			async function cleanupRecording() {
+				console.log("Cleaning up previous recording resources...");
+				
+				// Stop MediaStream tracks to release camera/screen access
+				if (state.stream) {
+					try {
+						state.stream.getTracks().forEach((track) => {
+							if (track.readyState === "live") {
+								track.stop();
+							}
+						});
+					} catch (err) {
+						console.warn("Error stopping stream tracks:", err);
+					}
+					state.stream = null;
+				}
+
+				// Cancel RAF-based frame capture
+				if (state.captureRequestId) {
+					cancelAnimationFrame(state.captureRequestId);
+					state.captureRequestId = null;
+				}
+
+				// Stop timer-based frame capture
+				if (state.primaryTimerId) {
+					clearInterval(state.primaryTimerId);
+					state.primaryTimerId = null;
+				}
+
+				// Clean up video element
+				if (state.videoElement) {
+					state.videoElement.pause();
+					state.videoElement.srcObject = null;
+					state.videoElement.removeEventListener("loadedmetadata", state.videoElement._metadataHandler);
+					state.videoElement.removeEventListener("error", state.videoElement._errorHandler);
+					state.videoElement = null;
+				}
+
+				// Clean up canvas element
+				if (state.canvasElement) {
+					const ctx = state.canvasElement.getContext("2d");
+					if (ctx) {
+						ctx.clearRect(0, 0, state.canvasElement.width, state.canvasElement.height);
+					}
+					state.canvasElement = null;
+				}
+
+				// Clean up blob URLs to prevent memory leaks
+				state.blobUrls.forEach(url => {
+					try {
+						URL.revokeObjectURL(url);
+					} catch (err) {
+						console.warn("Error revoking blob URL:", err);
+					}
+				});
+				state.blobUrls.clear();
+
+				// Hide any warnings
+				hideTabInactiveWarning();
+
+				// Small delay to ensure cleanup is complete
+				await new Promise(resolve => setTimeout(resolve, 100));
+			}
+
+			elements.fpsSlider.addEventListener("input", (e) => {
+				state.fps = parseInt(e.target.value);
+				elements.fpsValue.textContent = `${state.fps}fps`;
+			});
+
+			elements.durationSlider.addEventListener("input", (e) => {
+				state.duration = parseFloat(e.target.value);
+				elements.durationValue.textContent = `${state.duration.toFixed(1)}s`;
+			});
+
+			elements.aspectRatio.addEventListener("change", (e) => {
+				state.aspectRatio = e.target.value;
+			});
+
+			elements.quality.addEventListener("change", (e) => {
+				state.quality = e.target.value;
+			});
+
+			let selectionStart = null;
+			let isDrawing = false;
+
+			elements.selectRegionBtn.addEventListener("click", startRegionSelection);
+
+			// Enable visual region selection mode
+			function startRegionSelection() {
+				state.isSelecting = true;
+				elements.regionSelector.classList.remove("hidden");
+				elements.selectedRegionOverlay.classList.add("hidden");
+				elements.keyboardHint.classList.add("hidden");
+
+				document.body.style.cursor = "crosshair"; // Visual feedback for selection mode
+				document.body.style.overflow = "hidden";
+			}
+
+			function handleSelectionStart(clientX, clientY) {
+				if (!state.isSelecting) return;
+				isDrawing = true;
+				selectionStart = { x: clientX, y: clientY };
+				elements.selectionBox.style.left = `${clientX}px`;
+				elements.selectionBox.style.top = `${clientY}px`;
+				elements.selectionBox.style.width = "0px";
+				elements.selectionBox.style.height = "0px";
+				elements.selectionBox.classList.remove("hidden");
+				return false;
+			}
+
+			function cancelSelection() {
+				state.isSelecting = false;
+				isDrawing = false;
+				elements.regionSelector.classList.add("hidden");
+				elements.selectionBox.classList.add("hidden");
+				document.body.style.cursor = "default";
+				document.body.style.overflow = "";
+				selectionStart = null;
+			}
+
+			elements.regionSelector.addEventListener("mousedown", (e) => {
+				handleSelectionStart(e.clientX, e.clientY);
+				e.preventDefault();
+			});
+
+			elements.regionSelector.addEventListener(
+				"touchstart",
+				(e) => {
+					const touch = e.touches[0];
+					const handled = handleSelectionStart(touch.clientX, touch.clientY);
+					if (handled) e.preventDefault();
+				},
+				{ passive: false }
+			);
+
+			function handleSelectionMove(clientX, clientY) {
+				if (!isDrawing || !selectionStart) return;
+				let width = clientX - selectionStart.x;
+				let height = clientY - selectionStart.y;
+
+				if (state.aspectRatio !== "free") {
+					const [w, h] = state.aspectRatio.split(":").map(Number);
+					const ratio = w / h;
+					if (Math.abs(width) > Math.abs(height * ratio)) {
+						width = height * ratio * Math.sign(width);
+					} else {
+						height = (width / ratio) * Math.sign(height);
+					}
+				}
+
+				if (width < 0) {
+					elements.selectionBox.style.left = `${selectionStart.x + width}px`;
+					elements.selectionBox.style.width = `${Math.abs(width)}px`;
+				} else {
+					elements.selectionBox.style.left = `${selectionStart.x}px`;
+					elements.selectionBox.style.width = `${width}px`;
+				}
+				if (height < 0) {
+					elements.selectionBox.style.top = `${selectionStart.y + height}px`;
+					elements.selectionBox.style.height = `${Math.abs(height)}px`;
+				} else {
+					elements.selectionBox.style.top = `${selectionStart.y}px`;
+					elements.selectionBox.style.height = `${height}px`;
+				}
+				elements.selectionSize.innerHTML = `<i class="fas fa-ruler-combined mr-1"></i>${Math.abs(
+					Math.round(width)
+				)} × ${Math.abs(Math.round(height))}`;
+			}
+
+			elements.regionSelector.addEventListener("mousemove", (e) => {
+				handleSelectionMove(e.clientX, e.clientY);
+				e.preventDefault();
+			});
+
+			elements.regionSelector.addEventListener(
+				"touchmove",
+				(e) => {
+					if (e.touches.length === 1) {
+						const touch = e.touches[0];
+						handleSelectionMove(touch.clientX, touch.clientY);
+						e.preventDefault();
+					}
+				},
+				{ passive: false }
+			);
+
+			function endSelection() {
+				if (!isDrawing) return;
+				isDrawing = false;
+				elements.keyboardHint.classList.remove("hidden");
+				const rect = elements.selectionBox.getBoundingClientRect();
+
+				if (rect.width > 50 && rect.height > 50) {
+					// Store the selected region with scroll offset correction
+					state.selectedRegion = {
+						x: rect.x + window.scrollX,
+						y: rect.y + window.scrollY,
+						width: rect.width,
+						height: rect.height,
+					};
+
+					console.log('Region Selected:', {
+						originalRect: { x: rect.x, y: rect.y, width: rect.width, height: rect.height },
+						scrollX: window.scrollX,
+						scrollY: window.scrollY,
+						finalRegion: state.selectedRegion,
+						windowScreen: { x: window.screenX, y: window.screenY },
+						screen: { width: screen.width, height: screen.height }
+					});
+
+					// Show confirmation overlay
+					showSelectedRegion();
+
+					// Enable start button
+					elements.startBtn.disabled = false;
+
+					// Update button text
+					elements.selectRegionBtn.innerHTML = `
+            <i class="fas fa-crop-alt mr-2"></i>
+            <span class="truncate" style="white-space: normal">Change Region</span>
+        `;
+					elements.selectRegionBtn.classList.remove("from-purple-500/80", "to-indigo-600/80", "hover:from-purple-600", "hover:to-indigo-700");
+					elements.selectRegionBtn.classList.add("from-emerald-500/80", "to-green-600/80", "hover:from-emerald-600", "hover:to-green-700");
+				} else {
+					// Selection too small, show warning
+					showSelectionWarning();
+				}
+
+				// Hide selection interface
+				elements.regionSelector.classList.add("hidden");
+				elements.selectionBox.classList.add("hidden");
+				document.body.style.cursor = "default";
+				document.body.style.overflow = "";
+				state.isSelecting = false;
+			}
+
+			elements.toggleRegionBtn.addEventListener("click", toggleRegionVisibility);
+
+			function toggleRegionVisibility() {
+				if (!state.selectedRegion) return;
+
+				state.regionVisible = !state.regionVisible;
+
+				if (state.regionVisible) {
+					elements.selectedRegionOverlay.classList.remove("hidden");
+					elements.toggleRegionBtn.innerHTML = `
+                        <i class="fas fa-eye-slash mr-1 sm:mr-2 text-xs sm:text-sm"></i>
+                        <span class="truncate text-xs sm:text-sm md:text-base">Hide Region</span>
+                    `;
+					elements.toggleRegionBtn.classList.remove("from-slate-500/70", "to-slate-600/70", "hover:from-slate-600", "hover:to-slate-700");
+					elements.toggleRegionBtn.classList.add("from-orange-500/80", "to-amber-600/80", "hover:from-orange-600", "hover:to-amber-700");
+				} else {
+					elements.selectedRegionOverlay.classList.add("hidden");
+					elements.toggleRegionBtn.innerHTML = `
+                        <i class="fas fa-eye mr-1 sm:mr-2 text-xs sm:text-sm"></i>
+                        <span class="truncate text-xs sm:text-sm md:text-base">Show Region</span>
+                    `;
+					elements.toggleRegionBtn.classList.remove("from-orange-500/80", "to-amber-600/80", "hover:from-orange-600", "hover:to-amber-700");
+					elements.toggleRegionBtn.classList.add("from-slate-500/70", "to-slate-600/70", "hover:from-slate-600", "hover:to-slate-700");
+				}
+			}
+
+			function showSelectedRegion() {
+				// Position the confirmation overlay exactly where the user selected (viewport relative)
+				elements.selectedRegionBox.style.left = `${state.selectedRegion.x - window.scrollX}px`;
+				elements.selectedRegionBox.style.top = `${state.selectedRegion.y - window.scrollY}px`;
+				elements.selectedRegionBox.style.width = `${state.selectedRegion.width}px`;
+				elements.selectedRegionBox.style.height = `${state.selectedRegion.height}px`;
+				elements.selectedRegionSize.textContent = `${Math.round(
+					state.selectedRegion.width
+				)} × ${Math.round(state.selectedRegion.height)}`;
+
+				// Hide region by default, enable toggle button
+				state.regionVisible = false;
+				elements.selectedRegionOverlay.classList.add("hidden");
+				elements.toggleRegionBtn.disabled = false;
+				elements.toggleRegionBtn.innerHTML = `
+                    <i class="fas fa-eye mr-1 sm:mr-2 text-xs sm:text-sm"></i>
+                    <span class="truncate text-xs sm:text-sm md:text-base">Show Region</span>
+                `;
+
+				// Show helpful information about the selected region
+				showRegionConfirmation();
+			}
+
+			function showRegionConfirmation() {
+				const confirmDiv = document.createElement("div");
+				confirmDiv.className = "fixed top-4 left-1/2 transform -translate-x-1/2 bg-vibrantGreen text-white px-6 py-3 rounded-lg shadow-lg z-50 max-w-md";
+				confirmDiv.innerHTML = `
+					<div class="flex items-center gap-3">
+						<i class="fas fa-check-circle text-xl"></i>
+						<div>
+							<div class="font-semibold">Region Selected!</div>
+							<div class="text-sm mt-1">
+								${Math.round(state.selectedRegion.width)} × ${Math.round(state.selectedRegion.height)} pixels
+							</div>
+							<div class="text-xs mt-1 opacity-90">
+								Click "Start Recording" to begin capture
+							</div>
+						</div>
+						<button onclick="this.parentElement.parentElement.remove()" class="ml-2 text-white hover:text-gray-300">
+							<i class="fas fa-times"></i>
+						</button>
+					</div>
+				`;
+				document.body.appendChild(confirmDiv);
+
+				setTimeout(() => {
+					if (document.body.contains(confirmDiv)) {
+						document.body.removeChild(confirmDiv);
+					}
+				}, 4000);
+			}
+
+			function showSelectionWarning() {
+				const warning = document.createElement("div");
+				warning.className =
+					"fixed top-4 right-4 bg-red-500 text-white px-4 py-2 rounded-lg shadow-lg z-50";
+				warning.innerHTML = `
+        <i class="fas fa-exclamation-triangle mr-2"></i>
+        Selection too small! Minimum size: 50×50 pixels
+    `;
+				document.body.appendChild(warning);
+
+				setTimeout(() => {
+					document.body.removeChild(warning);
+				}, 3000);
+			}
+
+			elements.startBtn.addEventListener("click", startRecording);
+			elements.stopBtn.addEventListener("click", stopRecording);
+			elements.exportBtn.addEventListener("click", exportGIF);
+			elements.deleteBtn.addEventListener("click", deleteRecording);
+
+			async function startRecording() {
+				// Prevent multiple simultaneous recordings
+				if (state.isRecording) {
+					console.warn("Recording already in progress");
+					return;
+				}
+
+				// Complete cleanup of any previous recording
+				await cleanupRecording();
+
+				// Reset state
+				state.frames = [];
+				state.currentFrame = 0;
+				state.isRecording = false;
+				
+				elements.deleteBtn.disabled = true;
+				elements.selectedRegionOverlay.classList.add("hidden");
+				elements.keyboardHint.classList.add("hidden");
+				elements.previewSection.classList.add("hidden");
+
+				// Reset progress bar completely before starting
+				elements.progressBar.style.width = "0%";
+				elements.progressText.textContent = "Starting recording...";
+				elements.progressContainer.classList.remove("hidden");
+
+
+
+				// Add retry mechanism for screen capture
+				let retryCount = 0;
+				const maxRetries = 3;
+
+				async function attemptScreenCapture() {
+					try {
+						// Clear any existing streams first
+						if (state.stream) {
+							state.stream.getTracks().forEach((track) => track.stop());
+							state.stream = null;
+						}
+
+						// Add a small delay to ensure browser is ready
+						await new Promise((resolve) => setTimeout(resolve, 100));
+
+						// Enhanced screen capture with multiple options
+						let captureStream = null;
+
+						// Multiple capture strategies to handle different browser behaviors
+						const captureStrategies = [
+							// Strategy 1: Prefer full screen with modern API constraints
+							{
+								name: "Full Screen with Modern Hints",
+								constraints: {
+							video: {
+								displaySurface: "monitor", // Prefer monitor over window/tab
+										cursor: "always",
+								frameRate: { ideal: state.fps, max: 30 },
+										width: { ideal: screen.width, max: screen.width * 2 },
+										height: { ideal: screen.height, max: screen.height * 2 },
+							},
+							audio: false,
+									// Modern 2024 constraints to encourage full screen capture
+									preferCurrentTab: false,           // Don't prefer current tab
+									selfBrowserSurface: "exclude",     // Exclude self-capture
+									monitorTypeSurfaces: "include",    // Include monitor options
+									systemAudio: "exclude",           // Don't complicate with system audio
+									surfaceSwitching: "exclude"       // Don't offer switching during capture
+								}
+							},
+							// Strategy 2: Aggressive screen-only preferences
+							{
+								name: "Screen-Only Capture",
+								constraints: {
+									video: {
+										cursor: "always",
+										frameRate: { ideal: state.fps, max: 30 },
+										width: { ideal: screen.width, max: 4096 },
+										height: { ideal: screen.height, max: 2160 },
+									},
+									audio: false,
+									preferCurrentTab: false,
+									selfBrowserSurface: "exclude",
+									monitorTypeSurfaces: "include"
+								}
+							},
+							// Strategy 3: Fallback with minimal tab preference
+							{
+								name: "Basic Screen Capture",
+								constraints: {
+									video: {
+										cursor: "always",
+										frameRate: { ideal: state.fps, max: 30 }
+									},
+									audio: false,
+									preferCurrentTab: false
+								}
+							},
+							// Strategy 4: Last resort - let user choose anything
+							{
+								name: "User Choice Fallback",
+								constraints: {
+									video: {
+										cursor: "always",
+										frameRate: { ideal: state.fps, max: 30 }
+									},
+									audio: false
+								}
+							}
+						];
+
+						let lastError = null;
+						for (const strategy of captureStrategies) {
+							try {
+								console.log(`Attempting ${strategy.name}...`);
+								elements.progressText.textContent = `Requesting ${strategy.name}...`;
+								
+								captureStream = await navigator.mediaDevices.getDisplayMedia(strategy.constraints);
+								
+								// Verify we got a valid stream
+								if (captureStream && captureStream.active) {
+									const videoTrack = captureStream.getVideoTracks()[0];
+									if (videoTrack && videoTrack.readyState === "live") {
+										console.log(`${strategy.name} successful`);
+										console.log('Capture settings:', videoTrack.getSettings());
+										state.stream = captureStream;
+										break;
+									}
+								}
+								
+								// If we get here, stream wasn't valid
+								if (captureStream) {
+									captureStream.getTracks().forEach(track => track.stop());
+								}
+								throw new Error("Stream not active or video track not ready");
+								
+							} catch (err) {
+								console.warn(`${strategy.name} failed:`, err.message);
+								lastError = err;
+								
+								// Clean up failed stream
+								if (captureStream) {
+									captureStream.getTracks().forEach(track => track.stop());
+									captureStream = null;
+								}
+								
+								// If user denied permission, don't try other strategies
+								if (err.name === "NotAllowedError") {
+									throw err;
+								}
+								
+								// If no source selected, don't try other strategies
+								if (err.name === "NotFoundError") {
+									throw err;
+								}
+							}
+						}
+
+						// If all strategies failed, throw the last error
+						if (!state.stream) {
+							throw lastError || new Error("All capture strategies failed");
+						}
+
+						// Verify stream is active
+						if (!state.stream || !state.stream.active) {
+							throw new Error("Stream is not active");
+						}
+
+						// Check if video track exists and is enabled
+						const mainVideoTrack = state.stream.getVideoTracks()[0];
+						if (!mainVideoTrack || mainVideoTrack.readyState !== "live") {
+							throw new Error("Video track is not ready");
+						}
+
+						// Analyze what type of capture we got and inform the user
+						const captureTrack = state.stream.getVideoTracks()[0];
+						const settings = captureTrack.getSettings();
+						
+						// Enhanced capture type detection
+						const captureInfo = analyzeCaptureType(settings);
+						
+						console.log('Capture Analysis:', {
+							displaySurface: settings.displaySurface,
+							dimensions: `${settings.width}×${settings.height}`,
+							screenDimensions: `${window.screen.width}×${window.screen.height}`,
+							captureType: captureInfo.type,
+							confidence: captureInfo.confidence,
+							canRecordOtherApps: captureInfo.canRecordOtherApps,
+							settings: settings
+						});
+
+						// Show appropriate guidance based on what was captured
+						showCaptureGuidance(captureInfo);
+
+						// Success - proceed with recording
+						state.frames = [];
+						state.isRecording = true;
+						state.recordingStartTime = Date.now();
+						elements.startBtn.disabled = true;
+						elements.stopBtn.disabled = false;
+						elements.exportBtn.disabled = true;
+						elements.progressContainer.classList.remove("hidden");
+						elements.previewSection.classList.add("hidden");
+
+						// Add comprehensive stream monitoring
+						mainVideoTrack.addEventListener("ended", () => {
+							if (state.isRecording) {
+								console.log("Video track ended during recording");
+								showStreamEndedWarning();
+								stopRecording();
+							}
+						});
+
+						// Monitor track state changes
+						mainVideoTrack.addEventListener("mute", () => {
+							console.warn("Video track muted during recording");
+						});
+
+						mainVideoTrack.addEventListener("unmute", () => {
+							console.log("Video track unmuted during recording");
+						});
+
+						// Additional stream monitoring for robustness
+						const monitorStream = setInterval(() => {
+							if (!state.isRecording) {
+								clearInterval(monitorStream);
+								return;
+							}
+
+							if (!state.stream || !state.stream.active) {
+								console.error("Stream became inactive during recording");
+								clearInterval(monitorStream);
+								showStreamEndedWarning();
+								stopRecording();
+								return;
+							}
+
+							const track = state.stream.getVideoTracks()[0];
+							if (!track || track.readyState !== "live") {
+								console.error("Video track is no longer live");
+								clearInterval(monitorStream);
+								showStreamEndedWarning();
+								stopRecording();
+								return;
+							}
+						}, 2000); // Check every 2 seconds
+
+						captureFrames();
+					} catch (err) {
+						console.error("Screen capture attempt failed:", err);
+
+						// Handle specific error cases
+						if (err.name === "NotAllowedError") {
+							showPermissionError();
+							return;
+						}
+
+						if (err.name === "NotFoundError") {
+							showNoSourceError();
+							return;
+						}
+
+						// Retry for other errors
+						retryCount++;
+						if (retryCount < maxRetries) {
+							elements.progressText.textContent = `Retrying... (${retryCount}/${maxRetries})`;
+							await new Promise((resolve) => setTimeout(resolve, 1000));
+							return attemptScreenCapture();
+						} else {
+							showGenericError(err);
+						}
+					}
+				}
+
+				await attemptScreenCapture();
+			}
+
+			function getBrowserInfo() {
+				const userAgent = navigator.userAgent;
+				if (userAgent.includes('Chrome')) return 'Chrome';
+				if (userAgent.includes('Firefox')) return 'Firefox';
+				if (userAgent.includes('Safari') && !userAgent.includes('Chrome')) return 'Safari';
+				if (userAgent.includes('Edge')) return 'Edge';
+				return 'Unknown';
+			}
+
+			function showPermissionError() {
+				elements.progressContainer.classList.add("hidden");
+				elements.keyboardHint.classList.remove("hidden");
+				elements.startBtn.disabled = false;
+
+				const browser = getBrowserInfo();
+				let specificTip = '';
+				
+				switch(browser) {
+					case 'Chrome':
+						specificTip = 'Make sure to select "Entire Screen" or "Monitor" in the Chrome sharing dialog.';
+						break;
+					case 'Firefox':
+						specificTip = 'In Firefox, look for "Screen" option in the sharing dialog.';
+						break;
+					case 'Safari':
+						specificTip = 'Safari may require enabling screen recording in System Preferences > Security & Privacy.';
+						break;
+					case 'Edge':
+						specificTip = 'In Edge, select "Screen" or "Monitor" when prompted.';
+						break;
+					default:
+						specificTip = 'Please allow screen sharing when prompted by your browser.';
+				}
+
+				const errorDiv = document.createElement("div");
+				errorDiv.className =
+					"fixed top-4 right-4 bg-red-500 text-white px-4 py-2 rounded-lg shadow-lg z-50 max-w-md";
+				errorDiv.innerHTML = `
+                    <div class="flex items-start gap-3">
+                        <i class="fas fa-exclamation-triangle mt-1"></i>
+                        <div>
+                            <div class="font-semibold">Permission Denied</div>
+                            <div class="text-sm mt-1">Please allow screen sharing when prompted, or refresh the page and try again.</div>
+                            <div class="text-xs mt-2 bg-red-600/50 px-2 py-1 rounded">
+                                <i class="fas fa-lightbulb mr-1"></i>${specificTip}
+                            </div>
+                        </div>
+                        <button onclick="this.parentElement.parentElement.remove()" class="ml-2 text-white hover:text-gray-300">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                `;
+				document.body.appendChild(errorDiv);
+
+				setTimeout(() => {
+					if (document.body.contains(errorDiv)) {
+						document.body.removeChild(errorDiv);
+					}
+				}, 10000);
+			}
+
+			function showNoSourceError() {
+				elements.progressContainer.classList.add("hidden");
+				elements.keyboardHint.classList.remove("hidden");
+				elements.startBtn.disabled = false;
+
+				const errorDiv = document.createElement("div");
+				errorDiv.className =
+					"fixed top-4 right-4 bg-orange-500 text-white px-4 py-2 rounded-lg shadow-lg z-50 max-w-sm";
+				errorDiv.innerHTML = `
+                    <div class="flex items-start gap-3">
+                        <i class="fas fa-desktop mt-1"></i>
+                        <div>
+                            <div class="font-semibold">No Screen Source</div>
+                            <div class="text-sm mt-1">No screen or window was selected. Please try again and select a source to record.</div>
+                        </div>
+                        <button onclick="this.parentElement.parentElement.remove()" class="ml-2 text-white hover:text-gray-300">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                `;
+				document.body.appendChild(errorDiv);
+
+				setTimeout(() => {
+					if (document.body.contains(errorDiv)) {
+						document.body.removeChild(errorDiv);
+					}
+				}, 6000);
+			}
+
+			function showStreamEndedWarning() {
+				elements.keyboardHint.classList.remove("hidden");
+				const warningDiv = document.createElement("div");
+				warningDiv.className =
+					"fixed top-4 right-4 bg-yellow-500 text-white px-4 py-2 rounded-lg shadow-lg z-50 max-w-sm";
+				warningDiv.innerHTML = `
+                    <div class="flex items-start gap-3">
+                        <i class="fas fa-info-circle mt-1"></i>
+                        <div>
+                            <div class="font-semibold">Recording Stopped</div>
+                            <div class="text-sm mt-1">Screen sharing was ended by the system or user.</div>
+                        </div>
+                        <button onclick="this.parentElement.parentElement.remove()" class="ml-2 text-white hover:text-gray-300">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                `;
+				document.body.appendChild(warningDiv);
+
+				setTimeout(() => {
+					if (document.body.contains(warningDiv)) {
+						document.body.removeChild(warningDiv);
+					}
+				}, 5000);
+			}
+
+			function showGenericError(err) {
+				elements.progressContainer.classList.add("hidden");
+				elements.startBtn.disabled = false;
+
+				const errorDiv = document.createElement("div");
+				errorDiv.className =
+					"fixed top-4 right-4 bg-red-500 text-white px-4 py-2 rounded-lg shadow-lg z-50 max-w-sm";
+				errorDiv.innerHTML = `
+                    <div class="flex items-start gap-3">
+                        <i class="fas fa-exclamation-triangle mt-1"></i>
+                        <div>
+                            <div class="font-semibold">Recording Failed</div>
+                            <div class="text-sm mt-1">Unable to start screen recording. Please refresh the page and try again.</div>
+                            <button onclick="location.reload()" class="mt-2 px-3 py-1 bg-red-600 hover:bg-red-700 rounded text-xs transition-colors">
+                                Refresh Page
+                            </button>
+                        </div>
+                        <button onclick="this.parentElement.parentElement.remove()" class="ml-2 text-white hover:text-gray-300">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                `;
+				document.body.appendChild(errorDiv);
+			}
+
+			function analyzeCaptureType(settings) {
+				const screenWidth = window.screen.width;
+				const screenHeight = window.screen.height;
+				const captureWidth = settings.width;
+				const captureHeight = settings.height;
+
+				// Calculate confidence scores
+				const dimensionRatio = Math.min(captureWidth / screenWidth, captureHeight / screenHeight);
+				const aspectRatioMatch = Math.abs((captureWidth / captureHeight) - (screenWidth / screenHeight)) < 0.1;
+
+				let type, confidence, canRecordOtherApps;
+
+				if (settings.displaySurface === "monitor") {
+					type = "Full Screen (Monitor)";
+					confidence = "high";
+					canRecordOtherApps = true;
+				} else if (settings.displaySurface === "browser") {
+					if (captureWidth <= window.innerWidth && captureHeight <= window.innerHeight) {
+						type = "Browser Tab";
+						confidence = "high";
+						canRecordOtherApps = false;
+					} else {
+						type = "Browser Window";
+						confidence = "medium";
+						canRecordOtherApps = false;
+					}
+				} else if (settings.displaySurface === "window") {
+					if (dimensionRatio > 0.8 && aspectRatioMatch) {
+						type = "Large Application Window";
+						confidence = "medium";
+						canRecordOtherApps = false;
+					} else {
+						type = "Application Window";
+						confidence = "high";
+						canRecordOtherApps = false;
+					}
+				} else {
+					// Unknown displaySurface, analyze dimensions
+					if (dimensionRatio > 0.9 && aspectRatioMatch) {
+						type = "Likely Full Screen";
+						confidence = "medium";
+						canRecordOtherApps = true;
+					} else if (captureWidth <= window.innerWidth && captureHeight <= window.innerHeight) {
+						type = "Likely Browser Tab";
+						confidence = "medium";
+						canRecordOtherApps = false;
+					} else {
+						type = "Unknown Window/Application";
+						confidence = "low";
+						canRecordOtherApps = false;
+					}
+				}
+
+				return { type, confidence, canRecordOtherApps, settings };
+			}
+
+			function showCaptureGuidance(captureInfo) {
+				// Remove any existing guidance
+				const existing = document.getElementById('capture-guidance');
+				if (existing) existing.remove();
+
+				let message, icon, bgColor;
+				
+				if (captureInfo.canRecordOtherApps) {
+					message = {
+						title: `${captureInfo.type} Active`,
+						content: `<svg class="inline w-4 h-4 mr-1 text-green-200" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path></svg>You can switch to any application during recording - they will all be captured!`,
+						tip: `<svg class="inline w-4 h-4 mr-1 text-green-200" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg>${captureInfo.confidence === 'high' ? 'Perfect!' : 'Looks good!'} All desktop activity will be recorded`,
+						action: "Switch freely between apps during recording"
+					};
+					icon = "fas fa-desktop";
+					bgColor = "bg-green-500";
+				} else {
+					message = {
+						title: `${captureInfo.type} Detected`,
+						content: `<svg class="inline w-4 h-4 mr-1 text-orange-200" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path></svg>Only this specific window/tab will be recorded. Other applications won't be captured.`,
+						tip: `<svg class="inline w-4 h-4 mr-1 text-orange-200" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path></svg>To record other apps, click 'Start Recording' again and select 'Entire Screen'`,
+						action: "Restart to select different capture source"
+					};
+					icon = captureInfo.type.includes('Tab') ? "fas fa-browser" : "fas fa-window-maximize";
+					bgColor = "bg-orange-500";
+				}
+
+				const guidanceDiv = document.createElement("div");
+				guidanceDiv.id = 'capture-guidance';
+				guidanceDiv.className = `fixed bottom-4 left-4 ${bgColor} text-white px-4 py-3 rounded-lg shadow-lg z-40 max-w-sm`;
+				guidanceDiv.innerHTML = `
+					<div class="flex items-start gap-3">
+						<i class="${icon} mt-1 flex-shrink-0"></i>
+						<div class="flex-1 min-w-0">
+							<div class="font-semibold text-sm">${message.title}</div>
+							<div class="text-xs mt-1 opacity-90">${message.content}</div>
+							<div class="text-xs mt-2 bg-black/20 px-2 py-1 rounded">${message.tip}</div>
+							${!captureInfo.canRecordOtherApps ? `
+								<button onclick="restartCapture()" class="mt-2 px-3 py-1 bg-black/30 hover:bg-black/50 rounded text-xs transition-colors">
+									<i class="fas fa-redo mr-1"></i>${message.action}
+								</button>
+							` : ''}
+						</div>
+						<button onclick="this.parentElement.parentElement.remove()" class="ml-1 text-white hover:text-gray-300 flex-shrink-0">
+							<i class="fas fa-times text-xs"></i>
+						</button>
+					</div>
+				`;
+				document.body.appendChild(guidanceDiv);
+
+				// Auto-remove after 10 seconds (longer for important warnings)
+				const autoRemoveDelay = captureInfo.canRecordOtherApps ? 6000 : 12000;
+				setTimeout(() => {
+					if (document.body.contains(guidanceDiv)) {
+						guidanceDiv.style.opacity = '0';
+						guidanceDiv.style.transform = 'translateY(10px)';
+						setTimeout(() => {
+							if (document.body.contains(guidanceDiv)) {
+								document.body.removeChild(guidanceDiv);
+							}
+						}, 300);
+					}
+				}, autoRemoveDelay);
+			}
+
+			function restartCapture() {
+				// Stop current recording if active
+				if (state.isRecording) {
+					stopRecording();
+				}
+				
+				// Clean up current stream
+				if (state.stream) {
+					state.stream.getTracks().forEach(track => track.stop());
+					state.stream = null;
+				}
+
+				// Hide guidance
+				const existing = document.getElementById('capture-guidance');
+				if (existing) existing.remove();
+
+				// Restart the capture process
+				setTimeout(() => {
+					startRecording();
+				}, 500);
+			}
+
+
+
+			// Add check for screen capture support on page load
+			document.addEventListener("DOMContentLoaded", () => {
+				if (!navigator.mediaDevices || !navigator.mediaDevices.getDisplayMedia) {
+					const warningDiv = document.createElement("div");
+					warningDiv.className =
+						"fixed top-4 right-4 bg-red-500 text-white px-4 py-2 rounded-lg shadow-lg z-50 max-w-sm";
+					warningDiv.innerHTML = `
+                        <div class="flex items-start gap-3">
+                            <i class="fas fa-exclamation-triangle mt-1"></i>
+                            <div>
+                                <div class="font-semibold">Browser Not Supported</div>
+                                <div class="text-sm mt-1">Screen recording is not supported in this browser. Please use Chrome, Firefox, or Edge.</div>
+                            </div>
+                        </div>
+                    `;
+					document.body.appendChild(warningDiv);
+
+					// Disable the start button
+					elements.startBtn.disabled = true;
+					elements.startBtn.innerHTML = `
+                        <i class="fas fa-times mr-2"></i>Not Supported
+                    `;
+				}
+			});
+
+			// Enhanced error handling for the existing function
+			async function stopRecording() {
+				if (!state.isRecording) {
+					console.warn("No recording in progress to stop");
+					return;
+				}
+
+				console.log("Stopping recording...");
+				state.isRecording = false;
+
+				// Use the cleanup function
+				await cleanupRecording();
+
+				// Update UI
+				elements.startBtn.disabled = false;
+				elements.stopBtn.disabled = true;
+				elements.deleteBtn.disabled = false;
+				elements.keyboardHint.classList.remove("hidden");
+
+				setTimeout(() => {
+					elements.progressContainer.classList.add("hidden");
+				}, 500);
+
+				// Restore region visibility based on current state
+				if (state.selectedRegion && state.regionVisible) {
+					setTimeout(() => {
+						elements.selectedRegionOverlay.classList.remove("hidden");
+					}, 600);
+				}
+
+				if (state.frames.length > 0) {
+					elements.exportBtn.disabled = false;
+					elements.deleteBtn.disabled = false;
+					showPreview();
+				} else {
+					console.warn("No frames captured during recording");
+				}
+			}
+
+			async function deleteRecording() {
+				if (state.frames.length === 0) return;
+
+				// Show custom confirmation dialog
+				const confirmed = await modal.show({
+					title: "Delete Recording",
+					message: "Are you sure you want to delete the recorded frames? This action cannot be undone.",
+					type: "danger",
+					icon: "fas fa-trash-alt",
+					iconColor: "text-red-400",
+					confirmText: "Delete Forever",
+					cancelText: "Keep Recording"
+				});
+
+				if (!confirmed) return;
+
+				// Stop any playing animation
+				if (isPlaying) {
+					stopAnimation();
+				}
+
+				// Clean up all resources
+				await cleanupRecording();
+
+				// Clear all recorded data
+				state.frames = [];
+				state.currentFrame = 0;
+
+				// Clear timeline content
+				elements.timelineFrames.innerHTML = "";
+
+				// Hide preview section
+				elements.previewSection.classList.add("hidden");
+
+				// Reset button states
+				elements.exportBtn.disabled = true;
+				elements.deleteBtn.disabled = true;
+
+				// Clear progress bar
+				elements.progressBar.style.width = "0%";
+				elements.progressText.textContent = "Recording...";
+
+				// Reset canvas
+				const canvas = elements.previewCanvas;
+				const ctx = canvas.getContext("2d");
+				ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+				// Show success message
+				showDeleteSuccessMessage();
+			}
+
+			function showDeleteSuccessMessage() {
+				const successDiv = document.createElement("div");
+				successDiv.className =
+					"fixed top-4 right-4 bg-vibrantGreen text-white px-4 py-2 rounded-lg shadow-lg z-50";
+				successDiv.innerHTML = `
+                    <div class="flex items-center gap-2">
+                        <i class="fas fa-check-circle"></i>
+                        <span>Recording deleted successfully</span>
+                        <button onclick="this.parentElement.parentElement.remove()" class="ml-2 text-white hover:text-gray-300">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                `;
+				document.body.appendChild(successDiv);
+
+				setTimeout(() => {
+					if (document.body.contains(successDiv)) {
+						document.body.removeChild(successDiv);
+					}
+				}, 3000);
+			}
+
+			// Convert captured frames to downloadable GIF with quality settings
+			async function exportGIF() {
+				if (state.frames.length === 0) return;
+
+				elements.exportBtn.disabled = true;
+				elements.exportBtn.innerHTML = `
+                    <i class="fas fa-spinner fa-spin mr-1 sm:mr-2 text-xs sm:text-sm"></i>
+                    <span class="truncate text-xs sm:text-sm md:text-base">Exporting...</span>
+                `;
+
+				// Show progress
+				elements.progressContainer.classList.remove("hidden");
+				elements.progressBar.style.width = "0%";
+				elements.progressText.textContent = "Preparing GIF export...";
+
+				try {
+					// Initialize GIF encoder with quality settings (lower number = higher quality)
+					const gif = new GIF({
+						workers: 2,
+						quality:
+							state.quality === "high" ? 1 : state.quality === "medium" ? 10 : 20,
+						width: state.selectedRegion.width,
+						height: state.selectedRegion.height,
+						workerScript: gifWorkerUrl,
+					});
+
+					// Add frame processing progress
+					let processedFrames = 0;
+					const totalFrames = state.frames.length;
+
+					for (let i = 0; i < totalFrames; i++) {
+						const frame = state.frames[i];
+						const delay = i === 0 ? 0 : 1000 / state.fps;
+
+						gif.addFrame(frame.imageData, { delay: delay });
+
+						processedFrames++;
+						const progress = (processedFrames / totalFrames) * 50; // First 50% for adding frames
+						elements.progressBar.style.width = `${progress}%`;
+						elements.progressText.textContent = `Processing frame ${processedFrames}/${totalFrames}...`;
+
+						// Allow UI to update
+						await new Promise((resolve) => setTimeout(resolve, 10));
+					}
+
+					gif.on("progress", (p) => {
+						const progress = 50 + p * 50; // Second 50% for rendering
+						elements.progressBar.style.width = `${progress}%`;
+						elements.progressText.textContent = `Rendering GIF... ${Math.round(
+							progress
+						)}%`;
+					});
+
+					gif.on("finished", (blob) => {
+						// Create download link
+						const url = URL.createObjectURL(blob);
+						const a = document.createElement("a");
+						a.href = url;
+						a.download = `screen-capture-${Date.now()}.gif`;
+						document.body.appendChild(a);
+						a.click();
+						document.body.removeChild(a);
+						URL.revokeObjectURL(url);
+
+						// Reset export button
+						elements.exportBtn.disabled = false;
+						elements.exportBtn.innerHTML = `
+                            <i class="fas fa-download mr-1 sm:mr-2 text-xs sm:text-sm"></i>
+                            <span class="truncate text-xs sm:text-sm md:text-base">Export GIF</span>
+                        `;
+
+						// Hide progress
+						elements.progressContainer.classList.add("hidden");
+
+						// Show success message
+						showExportSuccessMessage();
+					});
+
+					gif.render();
+				} catch (error) {
+					console.error("Export failed:", error);
+					showExportError(error);
+
+					// Reset export button
+					elements.exportBtn.disabled = false;
+					elements.exportBtn.innerHTML = `
+                        <i class="fas fa-download mr-1 sm:mr-2 text-xs sm:text-sm"></i>
+                        <span class="truncate text-xs sm:text-sm md:text-base">Export GIF</span>
+                    `;
+					elements.progressContainer.classList.add("hidden");
+				}
+			}
+
+			function showExportSuccessMessage() {
+				const successDiv = document.createElement("div");
+				successDiv.className =
+					"fixed top-4 right-4 bg-vibrantGreen text-white px-4 py-2 rounded-lg shadow-lg z-50";
+				successDiv.innerHTML = `
+                    <div class="flex items-center gap-2">
+                        <i class="fas fa-download"></i>
+                        <span>GIF exported successfully!</span>
+                        <button onclick="this.parentElement.parentElement.remove()" class="ml-2 text-white hover:text-gray-300">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                `;
+				document.body.appendChild(successDiv);
+
+				setTimeout(() => {
+					if (document.body.contains(successDiv)) {
+						document.body.removeChild(successDiv);
+					}
+				}, 4000);
+			}
+
+			function showExportError(error) {
+				const errorDiv = document.createElement("div");
+				errorDiv.className =
+					"fixed top-4 right-4 bg-red-500 text-white px-4 py-2 rounded-lg shadow-lg z-50 max-w-sm";
+				errorDiv.innerHTML = `
+                    <div class="flex items-start gap-3">
+                        <i class="fas fa-exclamation-triangle mt-1"></i>
+                        <div>
+                            <div class="font-semibold">Export Failed</div>
+                            <div class="text-sm mt-1">Failed to create GIF. Please try again or reduce the quality setting.</div>
+                        </div>
+                        <button onclick="this.parentElement.parentElement.remove()" class="ml-2 text-white hover:text-gray-300">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                `;
+				document.body.appendChild(errorDiv);
+			}
+
+			function captureFrames() {
+				// Create and store video element in state for proper cleanup
+				state.videoElement = document.createElement("video");
+				state.videoElement.srcObject = state.stream;
+				state.videoElement.autoplay = true;
+				state.videoElement.muted = true;
+				state.videoElement.playsInline = true;
+
+				// Create and store canvas element in state for proper cleanup
+				state.canvasElement = document.createElement("canvas");
+				const ctx = state.canvasElement.getContext("2d", { willReadFrequently: true });
+				state.canvasElement.width = state.selectedRegion.width;
+				state.canvasElement.height = state.selectedRegion.height;
+
+				// Frame timing system: ensures exact frame count and timing
+				const targetFrameInterval = 1000 / state.fps; // Time between frames in ms
+				const expectedTotalFrames = Math.ceil(state.fps * state.duration); // Total frames we should capture
+				let nextFrameTime = 0; // When the next frame should be captured (relative to start)
+				let missedFrames = 0;
+				
+				console.log(`Frame Capture Setup: ${state.fps}fps × ${state.duration}s = ${expectedTotalFrames} frames (interval: ${targetFrameInterval}ms)`);
+
+				// Store timing info in state for monitoring
+				state.expectedTotalFrames = expectedTotalFrames;
+				state.targetFrameInterval = targetFrameInterval;
+				
+
+				
+				// Primary timer: reliable frame capture independent of browser tab throttling
+				const primaryTimerId = setInterval(() => {
+					if (!state.isRecording || !state.videoElement) {
+						clearInterval(primaryTimerId);
+						return;
+					}
+					
+					const currentTime = Date.now();
+					const elapsedMs = currentTime - state.recordingStartTime;
+					const elapsed = elapsedMs / 1000;
+					
+					// Check if we should capture a frame based on timing
+					if (elapsedMs >= nextFrameTime && state.frames.length < expectedTotalFrames) {
+						console.log(`Timer capture trigger: ${elapsedMs}ms >= ${nextFrameTime}ms (frame ${state.frames.length + 1}/${expectedTotalFrames})`);
+						
+						// Capture frame directly without waiting for RAF
+						if (state.videoElement.videoWidth > 0 && state.videoElement.videoHeight > 0) {
+							try {
+								captureFrameNow(elapsed, elapsedMs);
+							} catch (error) {
+								console.error("Error in timer frame capture:", error);
+							}
+						}
+					}
+					
+					// Dual stop conditions: time limit OR frame count reached
+					const shouldStopByTime = elapsed >= state.duration;
+					const shouldStopByFrames = state.frames.length >= expectedTotalFrames;
+					
+					if (shouldStopByTime || shouldStopByFrames) {
+						console.log(`Timer stopping recording: time=${shouldStopByTime} (${elapsed.toFixed(1)}s/${state.duration}s), frames=${shouldStopByFrames} (${state.frames.length}/${expectedTotalFrames})`);
+							stopRecording();
+					}
+				}, Math.min(targetFrameInterval / 3, 16)); // High frequency but capped at 60fps
+				
+				// Store primary timer for cleanup
+				state.primaryTimerId = primaryTimerId;
+
+				// Track last frame for duplicate detection
+				let lastFrameImageData = null;
+				
+				// Extract frame capture logic into separate function for timer and RAF to share
+				function captureFrameNow(elapsed, elapsedMs) {
+					// Always capture frames regardless of tab visibility (for recording other apps)
+
+					// Debug information (reduced logging)
+					if (state.frames.length % 10 === 0) {  // Only log every 10th frame
+						console.log('Debug Info:', {
+							videoWidth: state.videoElement.videoWidth,
+							videoHeight: state.videoElement.videoHeight,
+							selectedRegion: state.selectedRegion,
+							tabActive: state.isTabActive
+						});
+					}
+
+					// Coordinate system mapping: Convert viewport selection to video frame coordinates
+					let scaleX, scaleY, offsetX = 0, offsetY = 0;
+					let mappingMethod = 'unknown';
+					
+					// Direct match: video size equals viewport size
+					if (state.videoElement.videoWidth === window.innerWidth && 
+						state.videoElement.videoHeight === window.innerHeight) {
+						scaleX = 1;
+						scaleY = 1;
+						mappingMethod = 'direct-viewport-match';
+					// Aspect ratio match: similar proportions, different sizes
+					} else if (Math.abs(state.videoElement.videoWidth / state.videoElement.videoHeight - window.innerWidth / window.innerHeight) < 0.1) {
+						scaleX = state.videoElement.videoWidth / window.innerWidth;
+						scaleY = state.videoElement.videoHeight / window.innerHeight;
+						mappingMethod = 'viewport-scaled';
+					} else {
+						// Screen capture: video might be scaled version of full screen
+						const screenScale = Math.max(
+							state.videoElement.videoWidth / screen.width,
+							state.videoElement.videoHeight / screen.height
+						);
+						
+						// HiDPI screens often scale 1.5x or 2x
+						if (screenScale > 1.0 && screenScale < 2.0) {
+							scaleX = state.videoElement.videoWidth / screen.width;
+							scaleY = state.videoElement.videoHeight / screen.height;
+							mappingMethod = 'screen-scaled-hidpi';
+						} else {
+							// Fallback: account for browser chrome (address bar, toolbar)
+							const browserChromeHeight = window.outerHeight - window.innerHeight;
+							const effectiveViewportHeight = window.innerHeight + browserChromeHeight * 0.5;
+							scaleX = state.videoElement.videoWidth / window.innerWidth;
+							scaleY = state.videoElement.videoHeight / effectiveViewportHeight;
+							mappingMethod = 'viewport-with-chrome-compensation';
+						}
+					}
+
+					const scaledX = state.selectedRegion.x * scaleX + offsetX;
+					const scaledY = state.selectedRegion.y * scaleY + offsetY;
+							const scaledWidth = state.selectedRegion.width * scaleX;
+							const scaledHeight = state.selectedRegion.height * scaleY;
+
+							// Clear canvas and draw the cropped region
+					const ctx = state.canvasElement.getContext("2d", { willReadFrequently: true });
+					ctx.clearRect(0, 0, state.canvasElement.width, state.canvasElement.height);
+							ctx.drawImage(
+						state.videoElement,
+								scaledX,
+								scaledY,
+								scaledWidth,
+								scaledHeight,
+								0,
+								0,
+						state.canvasElement.width,
+						state.canvasElement.height
+					);
+
+					// Create frame data synchronously
+					const imageData = ctx.getImageData(0, 0, state.canvasElement.width, state.canvasElement.height);
+					
+					// Add frame immediately with placeholder blob
+					const frameIndex = state.frames.length + 1;
+					console.log(`Captured frame ${frameIndex} at ${elapsed.toFixed(2)}s (target: ${(nextFrameTime/1000).toFixed(2)}s)`);
+					
+					// Add frame to array immediately (synchronously)
+								state.frames.push({
+						blob: null, // Will be updated asynchronously
+									timestamp: elapsed,
+						imageData: imageData,
+					});
+
+					// Create blob asynchronously but don't wait for it
+					state.canvasElement.toBlob((blob) => {
+						if (blob && state.isRecording) {
+							const blobUrl = URL.createObjectURL(blob);
+							state.blobUrls.add(blobUrl);
+							
+							// Update the frame with the actual blob
+							if (state.frames[frameIndex - 1]) {
+								state.frames[frameIndex - 1].blob = blob;
+							}
+						}
+					}, "image/png", 0.95);
+					
+					// Store this frame for future duplicate detection (if needed)
+					lastFrameImageData = imageData;
+
+					// Update timing for next frame
+					nextFrameTime += targetFrameInterval;
+				}
+
+				// Define event handlers with references for proper cleanup
+				const metadataHandler = () => {
+					console.log("Video metadata loaded, starting capture");
+					capture();
+				};
+
+				const errorHandler = (error) => {
+					console.error("Video error during capture:", error);
+					stopRecording();
+				};
+
+				// Store handlers for cleanup
+				state.videoElement._metadataHandler = metadataHandler;
+				state.videoElement._errorHandler = errorHandler;
+
+				// Add event listeners
+				state.videoElement.addEventListener("loadedmetadata", metadataHandler);
+				state.videoElement.addEventListener("error", errorHandler);
+
+				function capture() {
+					// Check if recording should continue
+					if (!state.isRecording) {
+						console.log("Capture loop stopped - recording ended");
+						return;
+					}
+
+					// Check if video and canvas still exist
+					if (!state.videoElement || !state.canvasElement) {
+						console.warn("Video or canvas element missing, stopping capture");
+						return;
+					}
+
+					const currentTime = Date.now();
+					const elapsed = (currentTime - state.recordingStartTime) / 1000;
+					const elapsedMs = currentTime - state.recordingStartTime;
+					
+					// Calculate progress based on frames captured and time elapsed
+					const frameProgress = (state.frames.length / expectedTotalFrames) * 100;
+					const timeProgress = (elapsed / state.duration) * 100;
+					const progress = Math.min(Math.max(frameProgress, timeProgress), 100);
+					
+					// Update progress with enhanced information
+					elements.progressBar.style.width = `${progress.toFixed(1)}%`;
+					
+					const statusText = state.isTabActive 
+						? `Recording... ${elapsed.toFixed(1)}s / ${state.duration}s (${state.frames.length}/${expectedTotalFrames} frames)`
+						: `Recording... ${elapsed.toFixed(1)}s / ${state.duration}s (${state.frames.length}/${expectedTotalFrames} frames) - Recording other apps`;
+					
+					elements.progressText.textContent = statusText;
+					elements.progressText.style.color = '#10B981'; // Green for active recording
+
+					// Check if recording should stop (either time or frame count reached)
+					const shouldStopByTime = elapsed >= state.duration;
+					const shouldStopByFrames = state.frames.length >= expectedTotalFrames;
+					
+					if (shouldStopByTime || shouldStopByFrames) {
+						const finalText = shouldStopByFrames 
+							? `Recording complete! ${state.frames.length} frames captured in ${elapsed.toFixed(1)}s`
+							: `Recording complete! ${state.duration}s recorded (${state.frames.length} frames)`;
+						
+						elements.progressBar.style.width = "100%";
+						elements.progressText.textContent = finalText;
+						elements.progressText.style.color = '#10B981'; // Green for completion
+						
+						console.log(`Recording stopped: ${shouldStopByFrames ? 'Frame count reached' : 'Time elapsed'}`);
+						console.log(`Final stats: ${state.frames.length} frames in ${elapsed.toFixed(2)}s (expected: ${expectedTotalFrames} frames)`);
+						
+						// Calculate actual vs expected frame rate
+						const actualFps = state.frames.length / elapsed;
+						const fpsAccuracy = (actualFps / state.fps) * 100;
+						console.log(`Frame rate accuracy: ${actualFps.toFixed(1)}fps actual vs ${state.fps}fps target (${fpsAccuracy.toFixed(1)}% accuracy)`);
+						
+						setTimeout(() => {
+							stopRecording();
+						}, 200);
+						return;
+					}
+
+					// Note: Primary capture is now handled by the timer
+					// RAF is only used for UI updates and progress tracking
+
+					// Continue capture loop
+					state.captureRequestId = requestAnimationFrame(capture);
+				}
+
+				// Start video playback
+				try {
+					state.videoElement.play().catch(err => {
+						console.error("Error starting video playback:", err);
+						stopRecording();
+					});
+				} catch (error) {
+					console.error("Error in captureFrames:", error);
+					stopRecording();
+				}
+			}
+
+			elements.regionSelector.addEventListener("mouseup", endSelection);
+			elements.regionSelector.addEventListener("mouseleave", endSelection);
+			elements.regionSelector.addEventListener("touchend", endSelection);
+			elements.regionSelector.addEventListener("touchcancel", endSelection);
+
+			function showPreview() {
+				elements.previewSection.classList.remove("hidden");
+				const canvas = elements.previewCanvas;
+				const ctx = canvas.getContext("2d", { willReadFrequently: true });
+				canvas.width = state.selectedRegion.width;
+				canvas.height = state.selectedRegion.height;
+				elements.frameCount.textContent = `${state.frames.length} frames`;
+				elements.totalTime.textContent = `${state.duration.toFixed(1)}s`;
+				
+				// Clear existing timeline content and revoke old URLs
+				const existingThumbs = elements.timelineFrames.querySelectorAll("div");
+				existingThumbs.forEach(thumb => {
+					const bgImage = thumb.style.backgroundImage;
+					if (bgImage) {
+						const url = bgImage.slice(5, -2); // Remove 'url("' and '")'
+						if (url.startsWith("blob:")) {
+							try {
+								URL.revokeObjectURL(url);
+							} catch (err) {
+								console.warn("Error revoking timeline thumbnail URL:", err);
+							}
+						}
+					}
+				});
+				elements.timelineFrames.innerHTML = "";
+
+				// Create new timeline thumbnails
+				state.frames.forEach((frame, index) => {
+					const thumb = document.createElement("div");
+					thumb.className =
+						"flex-1 h-full bg-gray-700 border-r border-gray-800 cursor-pointer hover:bg-gray-600 transition-all";
+					
+					// Create thumbnail URL and track it
+					const thumbUrl = URL.createObjectURL(frame.blob);
+					state.blobUrls.add(thumbUrl);
+					
+					thumb.style.backgroundImage = `url(${thumbUrl})`;
+					thumb.style.backgroundSize = "cover";
+					thumb.style.backgroundPosition = "center";
+					thumb.addEventListener("click", () => {
+						state.currentFrame = index;
+						updatePreview();
+					});
+					elements.timelineFrames.appendChild(thumb);
+				});
+
+				state.currentFrame = 0;
+				updatePreview();
+			}
+
+			function updatePreview() {
+				if (state.frames.length === 0) return;
+				const canvas = elements.previewCanvas;
+				const ctx = canvas.getContext("2d", { willReadFrequently: true });
+				const frame = state.frames[state.currentFrame];
+				const img = new Image();
+				img.onload = () => {
+					ctx.clearRect(0, 0, canvas.width, canvas.height);
+					ctx.drawImage(img, 0, 0);
+				};
+				img.src = URL.createObjectURL(frame.blob);
+				const markerPosition = (state.currentFrame / (state.frames.length - 1)) * 100;
+				elements.timelineMarker.style.left = `${markerPosition}%`;
+				elements.currentTime.textContent = `${frame.timestamp.toFixed(1)}s`;
+			}
+
+			let isPlaying = false;
+			elements.playBtn.addEventListener("click", () => {
+				if (isPlaying) {
+					stopAnimation();
+				} else {
+					playAnimation();
+				}
+			});
+
+			function playAnimation() {
+				isPlaying = true;
+				elements.playBtn.innerHTML = '<i class="fas fa-pause mr-2"></i>Pause Preview';
+				elements.playBtn.classList.remove("from-emerald-500", "to-teal-600", "hover:from-emerald-600", "hover:to-teal-700");
+				elements.playBtn.classList.add("from-orange-500", "to-amber-600", "hover:from-orange-600", "hover:to-amber-700");
+				const frameInterval = 1000 / state.fps;
+				let lastFrameTime = Date.now();
+				function animate() {
+					if (!isPlaying) return;
+					const currentTime = Date.now();
+					if (currentTime - lastFrameTime >= frameInterval) {
+						state.currentFrame = (state.currentFrame + 1) % state.frames.length;
+						updatePreview();
+						lastFrameTime = currentTime;
+					}
+					state.animationId = requestAnimationFrame(animate);
+				}
+				animate();
+			}
+
+			function stopAnimation() {
+				isPlaying = false;
+				elements.playBtn.innerHTML = '<i class="fas fa-play mr-2"></i>Play Preview';
+				elements.playBtn.classList.remove("from-orange-500", "to-amber-600", "hover:from-orange-600", "hover:to-amber-700");
+				elements.playBtn.classList.add("from-emerald-500", "to-teal-600", "hover:from-emerald-600", "hover:to-teal-700");
+				if (state.animationId) {
+					cancelAnimationFrame(state.animationId);
+				}
+			}
+
+			// Replace the timeline event listener and add these enhanced features
+
+			// Timeline drag handling
+			let isDraggingTimeline = false;
+			let timelineDragStartX = 0;
+
+			// Replace the existing timeline click event listener with this enhanced version
+			elements.timeline.addEventListener("mousedown", (e) => {
+				isDraggingTimeline = true;
+				timelineDragStartX = e.clientX;
+				handleTimelineInteraction(e);
+				e.preventDefault();
+			});
+
+			document.addEventListener("mousemove", (e) => {
+				if (isDraggingTimeline) {
+					handleTimelineInteraction(e);
+					e.preventDefault();
+				}
+			});
+
+			document.addEventListener("mouseup", (e) => {
+				if (isDraggingTimeline) {
+					isDraggingTimeline = false;
+					e.preventDefault();
+				}
+			});
+
+			function handleTimelineInteraction(e) {
+				if (state.frames.length === 0) return;
+
+				const rect = elements.timeline.getBoundingClientRect();
+				const x = e.clientX - rect.left;
+				const percentage = Math.max(0, Math.min(1, x / rect.width));
+
+				// Calculate frame index
+				const newFrame = Math.floor(percentage * state.frames.length);
+				state.currentFrame = Math.max(0, Math.min(newFrame, state.frames.length - 1));
+
+				// Stop animation while scrubbing
+				if (isPlaying) {
+					stopAnimation();
+				}
+
+				updatePreview();
+			}
+
+			// Touch support for timeline scrubbing
+			elements.timeline.addEventListener(
+				"touchstart",
+				(e) => {
+					isDraggingTimeline = true;
+					const touch = e.touches[0];
+					handleTimelineInteraction(touch);
+					e.preventDefault();
+				},
+				{ passive: false }
+			);
+
+			document.addEventListener(
+				"touchmove",
+				(e) => {
+					if (isDraggingTimeline && e.touches.length === 1) {
+						const touch = e.touches[0];
+						handleTimelineInteraction(touch);
+						e.preventDefault();
+					}
+				},
+				{ passive: false }
+			);
+
+			document.addEventListener("touchend", (e) => {
+				if (isDraggingTimeline) {
+					isDraggingTimeline = false;
+					e.preventDefault();
+				}
+			});
+
+			// Global keyboard shortcuts
+			document.addEventListener("keydown", (e) => {
+				switch (e.code) {
+					case "Space":
+					case "KeyS":
+						e.preventDefault();
+						handleSpacebarToggle();
+						break;
+
+					case "Escape":
+						e.preventDefault();
+						handleEscapeKey();
+						break;
+
+					case "ArrowLeft":
+						e.preventDefault();
+						navigateFrame(-1);
+						break;
+
+					case "ArrowRight":
+						e.preventDefault();
+						navigateFrame(1);
+						break;
+
+					case "KeyP":
+						if (e.ctrlKey || e.metaKey) {
+							e.preventDefault();
+							togglePreviewPlayback();
+						}
+						break;
+				}
+			});
+
+			function handleSpacebarToggle() {
+				// If we're in region selection mode, ignore spacebar
+				if (state.isSelecting) {
+					return;
+				}
+
+				// If recording is in progress, stop it
+				if (state.isRecording) {
+					stopRecording();
+					return;
+				}
+
+				// If we have a selected region and not recording, start recording
+				if (state.selectedRegion && !elements.startBtn.disabled) {
+					startRecording();
+					return;
+				}
+
+				// If we have recorded frames and in preview mode, toggle playback
+				if (state.frames.length > 0) {
+					togglePreviewPlayback();
+					return;
+				}
+
+				// If no region selected, prompt user to select one
+				if (!state.selectedRegion) {
+					showKeyboardHint("Please select a region first (click 'Select Region' button)");
+					return;
+				}
+			}
+
+			async function handleEscapeKey() {
+				// Priority 1: Cancel region selection
+				if (state.isSelecting) {
+					cancelSelection();
+					return;
+				}
+
+				// Priority 2: Stop recording
+				if (state.isRecording) {
+					const confirmed = await modal.show({
+						title: "Stop Recording",
+						message: "Stop recording? This will save the current progress and you can export or delete the recording.",
+						type: "warning",
+						icon: "fas fa-stop-circle",
+						iconColor: "text-orange-400",
+						confirmText: "Stop Recording",
+						cancelText: "Continue Recording"
+					});
+
+					if (confirmed) {
+						stopRecording();
+					}
+					return;
+				}
+
+				// Priority 3: Stop preview playback
+				if (isPlaying) {
+					stopAnimation();
+					return;
+				}
+			}
+
+			function navigateFrame(direction) {
+				if (state.frames.length === 0) return;
+
+				// Stop animation while manually navigating
+				if (isPlaying) {
+					stopAnimation();
+				}
+
+				const newFrame = state.currentFrame + direction;
+				state.currentFrame = Math.max(0, Math.min(newFrame, state.frames.length - 1));
+				updatePreview();
+			}
+
+			function togglePreviewPlayback() {
+				if (state.frames.length === 0) return;
+
+				if (isPlaying) {
+					stopAnimation();
+				} else {
+					playAnimation();
+				}
+			}
+
+			function showKeyboardHint(message) {
+				const hint = document.createElement("div");
+				hint.className =
+					"fixed top-4 left-1/2 transform -translate-x-1/2 bg-vibrantGreen text-white px-4 py-2 rounded-lg shadow-lg z-50";
+				hint.innerHTML = `
+					<i class="fas fa-keyboard mr-2"></i>
+					${message}
+				`;
+				document.body.appendChild(hint);
+
+				setTimeout(() => {
+					if (document.body.contains(hint)) {
+						document.body.removeChild(hint);
+					}
+				}, 3000);
+			}
+
+			function updatePreview() {
+				if (state.frames.length === 0) return;
+				const canvas = elements.previewCanvas;
+				const ctx = canvas.getContext("2d");
+				const frame = state.frames[state.currentFrame];
+				const img = new Image();
+				
+				img.onload = () => {
+					ctx.clearRect(0, 0, canvas.width, canvas.height);
+					ctx.drawImage(img, 0, 0);
+				};
+				
+				img.onerror = () => {
+					console.error("Error loading preview image");
+				};
+				
+				// Create and track preview URL
+				const previewUrl = URL.createObjectURL(frame.blob);
+				state.blobUrls.add(previewUrl);
+				img.src = previewUrl;
+
+				const markerPosition =
+					state.frames.length > 1
+						? (state.currentFrame / (state.frames.length - 1)) * 100
+						: 0;
+				elements.timelineMarker.style.left = `${markerPosition}%`;
+				elements.currentTime.textContent = `${frame.timestamp.toFixed(1)}s`;
+
+				if (isDraggingTimeline) {
+					elements.timelineMarker.style.transform = "scaleX(2)";
+					elements.timelineMarker.style.backgroundColor = "#f59e0b";
+				} else {
+					elements.timelineMarker.style.transform = "scaleX(1)";
+					elements.timelineMarker.style.backgroundColor = "#ffffff";
+				}
+			}
+		</script>
+	</body>
+</html>

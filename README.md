@@ -1,6 +1,6 @@
 # UI Design Collection
 
-A comprehensive collection of 12 interactive React components and web applications showcasing modern UI/UX design patterns, engaging user experiences, and cutting-edge web technologies.
+A comprehensive collection of 14 interactive React components and web applications showcasing modern UI/UX design patterns, engaging user experiences, and cutting-edge web technologies.
 
 ## 🚀 Components Overview
 
@@ -225,6 +225,44 @@ A comprehensive event management platform for hybrid (in-person + virtual) meetu
 
 ---
 
+### 🎬 GIF Creator
+**Location**: `gifCreator.html`
+
+A professional screen capture tool that creates high-quality GIFs with an intuitive glassmorphism interface.
+
+**Features**:
+- 🖥️ Advanced screen capture with customizable recording areas
+- 🎨 Beautiful glassmorphism UI with gradient animations
+- ⏱️ Timeline controls with frame-by-frame editing
+- 🔧 Professional export settings and quality controls
+- 📱 Fully responsive design with touch-friendly controls
+- ⌨️ Keyboard shortcuts for efficient workflow
+- 🎯 Real-time preview and editing capabilities
+- ⚡ Optimized performance with smooth animations
+
+**Key Technologies**: HTML5, Canvas API, Tailwind CSS, advanced CSS animations
+
+---
+
+### 📅 Conference Companion
+**Location**: `ConferenceSchedule/conferenceSchedule.tsx`
+
+A comprehensive conference management app with session tracking, speaker profiles, and personalized scheduling.
+
+**Features**:
+- 📋 Complete session management with detailed speaker information
+- 🔍 Advanced filtering by track, time, and session type
+- 💾 Personal schedule saving and bookmark functionality
+- 👤 User profile management with activity tracking
+- 📱 Mobile-first responsive design with touch optimization
+- 🎯 Interactive session cards with expandable details
+- ⏰ Time-based session organization and scheduling
+- 🏢 Multi-track conference support with room assignments
+
+**Key Technologies**: React, TypeScript, responsive design, local storage management
+
+---
+
 ## 🎨 Design Philosophy
 
 These components demonstrate:
@@ -247,7 +285,7 @@ These components demonstrate:
 - **Frontend**: React, TypeScript, HTML5, CSS3
 - **Animation Libraries**: Framer Motion, custom CSS animations
 - **Styling**: Tailwind CSS, custom design systems
-- **Graphics**: SVG animations, HTML5 Canvas, advanced visualizations
+- **Graphics**: SVG animations, HTML5 Canvas, screen capture APIs, advanced visualizations
 - **State Management**: React Hooks, localStorage, context API, complex state patterns
 - **Algorithms**: Pathfinding, validation logic, game mechanics, timeline calculations
 - **Media Integration**: Video calling, real-time communication APIs
@@ -284,6 +322,7 @@ import TimeWheel from './TimeWheel/TimeWheel';
 import CircuitPuzzle from './Puzzle/puzzle';
 import StoryFlow from './storyFlow/storyFlow';
 import HybridMeetups from './hybridMeetups/hybridMeetups';
+import ConferenceCompanion from './ConferenceSchedule/conferenceSchedule';
 // ... other imports
 
 function App() {
@@ -297,6 +336,7 @@ function App() {
       <CircuitPuzzle />
       <StoryFlow />
       <HybridMeetups />
+      <ConferenceCompanion />
       {/* ... other components */}
     </div>
   );
@@ -309,6 +349,7 @@ function App() {
 - `plantSimulation.html` - Plant care game (standard version)
 - `wordTypingGame.html` - Word Cascade retro typing arcade game
 - `magnetSimuation.html` - Magnetic field visualizer and physics simulation
+- `gifCreator.html` - Professional GIF creation and screen capture tool
 
 ## 🎮 Interactive Features
 
@@ -324,6 +365,8 @@ function App() {
 - **Magnetic Field**: Interactive physics simulation with field visualization
 - **StoryFlow Pro**: Professional storyboard editor with timeline controls
 - **Hybrid Meetups**: Event management platform with video integration
+- **GIF Creator**: Professional screen capture and GIF creation tool
+- **Conference Companion**: Event management with session tracking and profiles
 
 ## 📄 License
 
